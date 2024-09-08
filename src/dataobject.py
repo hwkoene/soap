@@ -25,9 +25,11 @@ import json
 from pathlib import Path
 from pprint import pformat
 from uuid import UUID, uuid4
-from properties import make_property
 import inspect
 from inspect import signature, Parameter
+
+# --- 
+from src.properties import make_property
 
 
 class DataObject:
@@ -122,6 +124,7 @@ class DataObjectEncoder(json.JSONEncoder):
 
 def dataobject(cls):
     # TODO: Return relational fields as DataObjectList
+    # TODO: Make list operations update the object
     class DataObjectList(list):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
