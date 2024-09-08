@@ -41,7 +41,9 @@ class DataObject:
         3. Use cases:
             a. Check if network persistence is possible (blocked by Functionality #3)
             
-        Functionality:
+        Functionality
+        1. Return list[DataObject] fields as DataObjectList to allow querying
+        2. Make DataObjectList operations update the object
         3. Add watchdog functionality
         4. Add archiving functionality
         5. Integrate with NiceGUI
@@ -137,7 +139,7 @@ def dataobject(cls):
         
         def sort(self, key, reverse=False) -> DataObjectList:
             return sorted(self, key=key, reverse=reverse)
-        
+
     # Keep track of class instances
     setattr(cls, '__DataObject_instances', DataObjectList())
     setattr(cls, '__DataObject_directory', DataObject._DataObject__directory / cls.__name__)

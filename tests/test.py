@@ -150,6 +150,8 @@ class TestDataObjectSystem(unittest.TestCase):
     def test_filter_complex(self):
         # Test filtering TestObjectC by active status and tag count
         filtered_c = TestObjectC.filter(active=True, tags=lambda t: len(t) > 2)
+        # TODO: Return reference fields as DataObjectList
+        filtered_c[0].ref_b_list.filter(timestamp=lambda ts: ts < datetime.now())
         self.assertTrue(all(obj.active and len(obj.tags) > 2 for obj in filtered_c))
 
         # Test filtering TestObjectD by priority and reference to TestObjectB
