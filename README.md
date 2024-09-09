@@ -36,12 +36,9 @@ b2 = MyClassB(daddy=b1,
               other_items=[b1])
 
 a1.inventory.append(b1)
-a1.save()                   # Explicit saving because 'append' doesn't trigger the custom getter
 a2.inventory.append(b2)
-a2.save()
 
 ```
-
 
 ## How it works
 Decorated classes will store its instances under `./data/<ClassName>` as a `.json` file.
