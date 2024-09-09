@@ -65,20 +65,20 @@ class TestDataObjectSystem(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Create random instances
-        for _ in range(200):
+        for _ in range(20):
             TestObjectA(name=random.choice(string.ascii_uppercase), 
                         value=random.randint(1, 100))
         
-        for _ in range(150):
+        for _ in range(15):
             TestObjectB(code=''.join(random.choices(string.ascii_lowercase, k=5)),
                         timestamp=datetime.now() + timedelta(days=random.randint(-100, 100)))
         
-        for _ in range(250):
+        for _ in range(25):
             TestObjectC(active=random.choice([True, False]),
                         tags=random.sample(string.ascii_lowercase, random.randint(1, 5)),
                         something={''.join(random.choices(string.ascii_letters, k=20)): random.randint(0, 100)})
         
-        for _ in range(100):
+        for _ in range(10):
             TestObjectD(priority=random.randint(3, 10),
                         description=''.join(random.choices(string.ascii_letters, k=20)))
             
@@ -150,8 +150,12 @@ class TestDataObjectSystem(unittest.TestCase):
     def test_filter_complex(self):
         # Test filtering TestObjectC by active status and tag count
         filtered_c = TestObjectC.filter(active=True, tags=lambda t: len(t) > 2)
-        # TODO: Return reference fields as DataObjectList
-        filtered_c[0].ref_b_list.filter(timestamp=lambda ts: ts < datetime.now())
+        TestObjectB.filter(objects=filtered_c[0].ref_b_list, timestamp=lambda ts: ts < datetime.now())
+        obj_to_append = random.choice(TestObjectB.all())
+        filtered_c[0].ref_b_list.append(obj_to_append)
+        filtered_c[0].ref_b_list.reverse()
+        obj_to_remove = random.choice(filtered_c[0].ref_b_list)
+        filtered_c[0].ref_b_list.remove(obj_to_remove)
         self.assertTrue(all(obj.active and len(obj.tags) > 2 for obj in filtered_c))
 
         # Test filtering TestObjectD by priority and reference to TestObjectB

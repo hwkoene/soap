@@ -23,7 +23,7 @@ from typing import get_args, get_origin
 from uuid import UUID
 
 
-def make_property(cls, field_name: str, field_type: str | type):
+def make_property(cls, field_name: str, field_type: str | type, data_object_list_class: type):
     """Use the annotations to get the value of the field.
 
     Args:
@@ -36,12 +36,17 @@ def make_property(cls, field_name: str, field_type: str | type):
         
     """
             
-    def setter(self, value):
+    def default_setter(self, value):
         self.__DataObject_fields[field_name] = value
         self.save()
         
     def default_getter(self):
         return self.__DataObject_fields[field_name]
+    
+    def list_setter(self, value):
+        self.__DataObject_fields[field_name] = data_object_list_class(value)
+        setattr(self.__DataObject_fields[field_name], '__container__', self)
+        self.save()
 
     def list_getter(self):
         # Determine if the list contains referces to other dataobjects (list[DataObject] or list['DataObject'])
@@ -55,7 +60,8 @@ def make_property(cls, field_name: str, field_type: str | type):
         
         if obj_get:
             if __builtins__['all'](isinstance(obj, (str, UUID)) for obj in self.__DataObject_fields[field_name]):
-                self.__DataObject_fields[field_name] = [obj_get(item) for item in self.__DataObject_fields[field_name]]
+                self.__DataObject_fields[field_name] = data_object_list_class([obj_get(item) for item in self.__DataObject_fields[field_name]])
+                setattr(self.__DataObject_fields[field_name], '__container__', self)
                    
             outdated = False       
             for item in self.__DataObject_fields[field_name]:
@@ -67,6 +73,7 @@ def make_property(cls, field_name: str, field_type: str | type):
                 self.save(check=False)
             
         return self.__DataObject_fields[field_name]
+            
     
     def datetime_getter(self):
         value_type = type(self.__DataObject_fields[field_name])
@@ -108,30 +115,30 @@ def make_property(cls, field_name: str, field_type: str | type):
     if isinstance(field_type, type):
         # Custom fields
         if field_type is datetime:
-            return property(fget=datetime_getter, fset=setter)
+            return property(fget=datetime_getter, fset=default_setter)
             
         elif field_type is Path:
-            return property(fget=path_getter, fset=setter)
+            return property(fget=path_getter, fset=default_setter)
         
         # Generic alias iterable fields
         elif get_origin(field_type) is list:
-            return property(fget=list_getter, fset=setter)
+            return property(fget=list_getter, fset=list_setter)
             
         # DataObject
         elif field_type.__name__ in cls._DataObject__types.keys():
-            return property(fget=dataobject_getter, fset=setter)
+            return property(fget=dataobject_getter, fset=default_setter)
             
         # Resolve regular fields
         else:
-            return property(fget=default_getter, fset=setter)
+            return property(fget=default_getter, fset=default_setter)
             
     # Generic alias iterable fields (Python 3.12)
     elif get_origin(field_type) is list:
-        return property(fget=list_getter, fset=setter)
+        return property(fget=list_getter, fset=list_setter)
     
     # 'DataObject'
     elif isinstance(field_type, str):
-        return property(fget=str_getter, fset=setter)
+        return property(fget=str_getter, fset=default_setter)
 
     else:
-        return property(fget=default_getter, fset=setter)
+        return property(fget=default_getter, fset=default_setter)

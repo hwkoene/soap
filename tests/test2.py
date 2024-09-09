@@ -46,8 +46,8 @@ b2 = MyClassB(daddy=a2,
               timestamp=b1.timestamp, 
               other_items=[b1])
 
-# TODO: Should use DataObjectList.append and save afterwards
 a1.inventory.append(b1)
+a1.inventory = [b1, b1, b1]
 # a1.save()
 a2.inventory.append(b2)
 # a2.save()

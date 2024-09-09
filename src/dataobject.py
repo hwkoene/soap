@@ -125,10 +125,9 @@ class DataObjectEncoder(json.JSONEncoder):
         return super().default(obj)
 
 def dataobject(cls):
-    # TODO: Return relational fields as DataObjectList
-    # TODO: Make list operations update the object
     class DataObjectList(list):
         def __init__(self, *args, **kwargs):
+            self.__container__ = None
             super().__init__(*args, **kwargs)
         
         def filter(self, func=__builtins__['all'], **kwargs) -> DataObjectList:
@@ -137,8 +136,58 @@ def dataobject(cls):
         def exclude(self, func=__builtins__['all'], **kwargs) -> DataObjectList:
             return cls.exclude(func=func, objects=self, **kwargs)
         
-        def sort(self, key, reverse=False) -> DataObjectList:
-            return sorted(self, key=key, reverse=reverse)
+        # def sort(self, key, reverse=False) -> DataObjectList:
+        #     return sorted(self, key=key, reverse=reverse)
+        
+        # def reverse(self) -> DataObjectList:
+        #     res = DataObjectList(reversed(self))
+        
+        # Wrapper to save 
+        def save_after(func):
+            
+            @wraps(func)
+            def wrapper(self, *args, **kwargs):
+                res = func(self, *args, **kwargs)
+                if self.__container__:
+                    self.__container__.save(check=False)
+                return res
+            return wrapper
+        
+        @save_after
+        def append(self, *args, **kwargs):
+            return super().append(*args, **kwargs)
+        
+        @save_after
+        def extend(self, *args, **kwargs):
+            return super().extend(*args, **kwargs)
+        
+        @save_after
+        def insert(self, *args, **kwargs):
+            return super().insert(*args, **kwargs)
+        
+        @save_after
+        def remove(self, *args, **kwargs):
+            return super().remove(*args, **kwargs)
+        
+        @save_after
+        def pop(self, *args, **kwargs):
+            return super().pop(*args, **kwargs)
+        
+        @save_after
+        def clear(self, *args, **kwargs):
+            return super().clear(*args, **kwargs)
+        
+        @save_after
+        def remove(self, *args, **kwargs):
+            return super().remove(*args, **kwargs)
+        
+        @save_after
+        def remove(self, *args, **kwargs):
+            return super().remove(*args, **kwargs)
+        
+        @save_after
+        def remove(self, *args, **kwargs):
+            return super().remove(*args, **kwargs)
 
     # Keep track of class instances
     setattr(cls, '__DataObject_instances', DataObjectList())
@@ -222,7 +271,7 @@ def dataobject(cls):
     DataObject._DataObject__types[cls.__name__] = cls
     
     for field_name, field_type in class_annotations.items():
-        setattr(cls, field_name, make_property(cls, field_name, field_type))
+        setattr(cls, field_name, make_property(cls, field_name, field_type, DataObjectList))
     
     # Define classmethods
     def check(obj, func, invert, values, callables):        
