@@ -76,13 +76,15 @@ class TestDataObjectSystem(unittest.TestCase):
         for _ in range(25):
             TestObjectC(active=random.choice([True, False]),
                         tags=random.sample(string.ascii_lowercase, random.randint(1, 5)),
+                        # TODO: Encode sets
+                        # something={"abc": [1, 2, {True, False}]})
                         something={''.join(random.choices(string.ascii_letters, k=20)): random.randint(0, 100)})
         
         for _ in range(10):
             TestObjectD(priority=random.randint(3, 10),
                         description=''.join(random.choices(string.ascii_letters, k=20)))
             
-        print(DataObject.count())
+        print(f'Test size: DataObject.count()')
             
         # Assign random references
         for obj_a in TestObjectA.all():
@@ -160,7 +162,9 @@ class TestDataObjectSystem(unittest.TestCase):
 
         # Test filtering TestObjectD by priority and reference to TestObjectB
         filtered_d = TestObjectD.filter(ref_b=lambda b: b.code.startswith('a'))
-        extra_filtered_d = filtered_d.exclude(priority=lambda x: x < 3).sort(key=lambda obj: obj.datetime_list[0])
+        # extra_filtered_d = filtered_d.exclude(priority=lambda x: x < 3).sort(key=lambda obj: obj.datetime_list[0])
+        extra_filtered_d = sorted(filtered_d.exclude(priority=lambda x: x < 3), key=lambda obj: obj.datetime_list[0])
+        
         self.assertTrue(all(obj.priority >= 3 and obj.ref_b.code.startswith('a') for obj in extra_filtered_d))
 
     def test_exclude_basic(self):

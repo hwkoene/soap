@@ -136,13 +136,6 @@ def dataobject(cls):
         def exclude(self, func=__builtins__['all'], **kwargs) -> DataObjectList:
             return cls.exclude(func=func, objects=self, **kwargs)
         
-        # def sort(self, key, reverse=False) -> DataObjectList:
-        #     return sorted(self, key=key, reverse=reverse)
-        
-        # def reverse(self) -> DataObjectList:
-        #     res = DataObjectList(reversed(self))
-        
-        # Wrapper to save 
         def save_after(func):
             
             @wraps(func)
