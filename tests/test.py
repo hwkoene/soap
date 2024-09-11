@@ -77,8 +77,8 @@ class TestDataObjectSystem(unittest.TestCase):
             TestObjectC(active=random.choice([True, False]),
                         tags=random.sample(string.ascii_lowercase, random.randint(1, 5)),
                         # TODO: Encode sets
-                        # something={"abc": [1, 2, {True, False}]})
-                        something={''.join(random.choices(string.ascii_letters, k=20)): random.randint(0, 100)})
+                        something={"abc": [1, 2, {True, False}]})
+                        # something={''.join(random.choices(string.ascii_letters, k=20)): random.randint(0, 100)})
         
         for _ in range(10):
             TestObjectD(priority=random.randint(3, 10),
@@ -120,19 +120,19 @@ class TestDataObjectSystem(unittest.TestCase):
             obj_d.ref_b = random.choice(TestObjectB.all())
             obj_d.datetime_list = [random_date()]*3
             
-    @classmethod
-    def tearDownClass(cls):
-        for obj in list(TestObjectA.all()):
-            obj.delete()
+    # @classmethod
+    # def tearDownClass(cls):
+    #     for obj in list(TestObjectA.all()):
+    #         obj.delete()
         
-        for obj in list(TestObjectB.all()):
-            obj.delete()
+    #     for obj in list(TestObjectB.all()):
+    #         obj.delete()
         
-        for obj in list(TestObjectC.all()):
-            obj.delete()
+    #     for obj in list(TestObjectC.all()):
+    #         obj.delete()
         
-        for obj in list(TestObjectD.all()):
-            obj.delete()
+    #     for obj in list(TestObjectD.all()):
+    #         obj.delete()
 
     def test_reference_integrity(self):
         for obj_a in TestObjectA.all():

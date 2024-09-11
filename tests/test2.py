@@ -47,12 +47,12 @@ b2 = MyClassB(daddy=a2,
               other_items=[b1])
 
 a1.inventory.append(b1)
-a1.inventory = [b1, b1, b1]
-# a1.save()
 a2.inventory.append(b2)
-# a2.save()
 
-ben_is_my_daddy = MyClassB.filter(daddy=lambda x: x.name.startswith('Ben'))
-steve_is_my_daddy = MyClassB.exclude(daddy=lambda x: not x.name.startswith('Steve'))
+cheese_i_have = a1.inventory.filter(other_items=lambda x: "Some cheese" in x)
+steve_not_my_daddy = MyClassB.exclude(daddy=lambda x: x.name.startswith('Steve'))
+print(cheese_i_have)        # [b1]
+print(steve_not_my_daddy)   # [b1]
 
-# print(ben_is_my_daddy is steve_is_my_daddy)
+print(type(steve_not_my_daddy)) # <class 'src.dataobject.dataobject.<locals>.DataObjectList'>
+print(type(a1.inventory))       # <class 'src.dataobject.dataobject.<locals>.DataObjectList'>

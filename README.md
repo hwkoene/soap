@@ -24,20 +24,36 @@ class MyClassB:
 `MyClassA` and `MyClassB` now reference each other.
 We create the objects like we would any other, just keep in mind to use all keyword arguments.
 
-```
-a1 = MyClassA(name="Benjamin") # Throws an error because 
-a2 = MyClassA(name="Steve", inventory=["Stone Pickaxe"])
+```python
+a1 = MyClassA(name="Benjamin")
+a2 = MyClassA(name="Steve")
 
 b1 = MyClassB(daddy=a1, 
               timestamp=datetime.now(), 
               other_items=['Some cheese', 'Bud light'])
-b2 = MyClassB(daddy=b1, 
+b2 = MyClassB(daddy=a2, 
               timestamp=b1.timestamp, 
               other_items=[b1])
+```
 
+Because `MyClassA.inventory` is annotated with `list['MyClassB']`[^1], the `getattr` function returns a `DataObjectList` type.
+This is basically a `list` with `filter` and `exlude` methods to perfor queries.
+Additionally, operations like `append` and `remove` are wrapped to save the object afterwards.
+
+[^1]: Behaviour is the same with annotations like `MyClassX`, `'MyClassX'`, `list[MyClassX]`.
+
+```python
 a1.inventory.append(b1)
 a2.inventory.append(b2)
 
+steve_not_my_daddy = MyClassB.exclude(daddy=lambda x: x.name.startswith('Steve'))
+cheese_i_have = a1.inventory.filter(other_items=lambda x: "Some cheese" in x)
+
+print(steve_not_my_daddy)   # [b1]
+print(cheese_i_have)        # [b1]
+
+print(type(steve_not_my_daddy)) # <class 'src.dataobject.dataobject.<locals>.DataObjectList'>
+print(type(a1.inventory))       # <class 'src.dataobject.dataobject.<locals>.DataObjectList'>
 ```
 
 ## How it works
@@ -47,9 +63,8 @@ Decorated classes will store its instances under `./data/<ClassName>` as a `.jso
 For each class variable that is annotated, a `property` will be provided with the same name. Class variables whos annotation is also a decorated object are stored as UUID and will be resolved when their `get` method is first called.
 
 ## Limitations
-All objects are kept in memory
+All objects are kept in memory.
 
 ## Next steps
 - Explicit archiving, adding items to a `.zip` archive.
-- Optional explicit saving for better performance.
 - Allow creaton/modification/deletion of objects from files using watchdog to monitor the data directory for changes.

@@ -121,6 +121,8 @@ class DataObjectEncoder(json.JSONEncoder):
             return obj.timestamp()
         elif isinstance(obj, Path):
             return str(obj)
+        elif isinstance(obj, set):
+            return tuple(obj)
 
         return super().default(obj)
 
@@ -169,18 +171,6 @@ def dataobject(cls):
         @save_after
         def clear(self, *args, **kwargs):
             return super().clear(*args, **kwargs)
-        
-        @save_after
-        def remove(self, *args, **kwargs):
-            return super().remove(*args, **kwargs)
-        
-        @save_after
-        def remove(self, *args, **kwargs):
-            return super().remove(*args, **kwargs)
-        
-        @save_after
-        def remove(self, *args, **kwargs):
-            return super().remove(*args, **kwargs)
 
     # Keep track of class instances
     setattr(cls, '__DataObject_instances', DataObjectList())
