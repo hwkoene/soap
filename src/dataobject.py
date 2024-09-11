@@ -48,7 +48,7 @@ class DataObject:
         3. Add watchdog functionality
         4. Add archiving functionality
         5. Integrate with NiceGUI
-        6. (Custom) encoders/decoders for more types
+        6. (Custom) transcoding for more types
         
         Bugs:
         1. Attributes annotated with DataObject subclasses get stored as strings, but not restored.
@@ -123,7 +123,6 @@ class DataObjectEncoder(json.JSONEncoder):
         elif isinstance(obj, Path):
             return str(obj)
         elif isinstance(obj, set):
-            logging.warning("Encoding/decoding set as list.")
             return tuple(obj)
 
         return super().default(obj)

@@ -64,8 +64,10 @@ print(type(a1.inventory))       # <class 'src.dataobject.dataobject.<locals>.Dat
 
 ## Limitations
 - All objects are kept in memory.
-- Sets are encoded/decoded as lists.
+- Currently, only `datetime` and `Path` objects are transcoded besides the builtins.
 
 ## Next steps
 - Explicit archiving, adding items to a `.zip` archive.
 - Allow creaton/modification/deletion of objects from files using watchdog to monitor the data directory for changes.
+    - This may allow this framework to function as a synchronized database.
+- Maybe replacing or supplementing DataObjectList with DataObjectSet to allow for more complex queries.

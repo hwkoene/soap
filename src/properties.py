@@ -73,14 +73,22 @@ def make_property(cls, field_name: str, field_type: str | type, data_object_list
                 self.save(check=False)
             
         return self.__DataObject_fields[field_name]
-            
     
+    # TODO: Generalise and allow for custom types
+    def set_getter(self):
+        value_type = type(self.__DataObject_fields[field_name])
+        if value_type is set:
+            self.__DataObject_fields[field_name] = datetime.fromtimestamp(self.__DataObject_fields[field_name])
+        return self.__DataObject_fields[field_name]
+    
+    # TODO: Generalise and allow for custom types
     def datetime_getter(self):
         value_type = type(self.__DataObject_fields[field_name])
         if value_type is float:
             self.__DataObject_fields[field_name] = datetime.fromtimestamp(self.__DataObject_fields[field_name])
         return self.__DataObject_fields[field_name]
     
+    # TODO: Generalise and allow for custom types
     def path_getter(self):
         value_type = type(self.__DataObject_fields[field_name])
         if value_type is str:
@@ -123,6 +131,10 @@ def make_property(cls, field_name: str, field_type: str | type, data_object_list
         # Generic alias iterable fields
         elif get_origin(field_type) is list:
             return property(fget=list_getter, fset=list_setter)
+        
+        # Generic alias iterable fields
+        elif get_origin(field_type) is set:
+            return property(fget=set_getter, fset=list_setter)
             
         # DataObject
         elif field_type.__name__ in cls._DataObject__types.keys():
@@ -135,6 +147,10 @@ def make_property(cls, field_name: str, field_type: str | type, data_object_list
     # Generic alias iterable fields (Python 3.12)
     elif get_origin(field_type) is list:
         return property(fget=list_getter, fset=list_setter)
+    
+    # Generic alias iterable fields (Python 3.12)
+    elif get_origin(field_type) is list:
+        return property(fget=set_getter, fset=default_setter)
     
     # 'DataObject'
     elif isinstance(field_type, str):

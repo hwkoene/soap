@@ -34,6 +34,7 @@ class TestObjectA:
     ref_b: 'TestObjectB' = None
     ref_c_list: list['TestObjectC'] = []
     true_or_false: bool = False
+    what_happens: set = {1, 5, 6}
 
 @dataobject
 class TestObjectB:
