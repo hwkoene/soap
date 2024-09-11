@@ -1,6 +1,12 @@
 # Python Object Persistence
 
-This library provides a single `@dataobject` decorator for object persistence. `filter` and `exclude` methods are added as classmethods to query the existing objects.
+This library provides a single `@dataobject` decorator for object persistence.
+Decorated classes will store their instances under `./data/<ClassName>` in `json` format with their UUID as filename.
+`filter()` and `exclude()` methods are added as classmethods to query the existing objects.
+
+For each class variable that is annotated, a `property` will be provided with the same name.
+
+Class variables whos annotation is also a decorated object or list thereof are stored as a string of their UUID and will be resolved when their `get()` method is first called.
 
 ## Example
 ```python
@@ -9,14 +15,14 @@ class MyClassA:
     name: str
     health: int = 100
     my_path: Path = None
-    inventory: list['MyClassB'] = []
+    inventory: list['MyClassB'] = [] # One-to-many
 ```
 This creates an `__init__` with the default arguments of the class variables.
 
 ```python
 @dataobject
 class MyClassB:
-    daddy: MyClassA
+    daddy: MyClassA # One-to-one relation
     other_items: list
     timestamp: datetime
     problems: random.randint(0, 99)
@@ -37,10 +43,10 @@ b2 = MyClassB(daddy=a2,
 ```
 
 Because `MyClassA.inventory` is annotated with `list['MyClassB']`[^1], the `getattr` function returns a `DataObjectList` type.
-This is basically a `list` with `filter` and `exlude` methods to perfor queries.
+This is basically a `list` with `filter()` and `exlude()` methods to perfor queries.
 Additionally, operations like `append` and `remove` are wrapped to save the object afterwards.
 
-[^1]: Behaviour is the same with annotations like `MyClassX`, `'MyClassX'`, `list[MyClassX]`.
+[^1]: Behaviour is similar with annotations like `MyClassX`, `'MyClassX'`, `list[MyClassX]`.
 
 ```python
 a1.inventory.append(b1)
@@ -56,14 +62,9 @@ print(type(steve_not_my_daddy)) # <class 'src.dataobject.dataobject.<locals>.Dat
 print(type(a1.inventory))       # <class 'src.dataobject.dataobject.<locals>.DataObjectList'>
 ```
 
-## How it works
-Decorated classes will store its instances under `./data/<ClassName>` as a `.json` file.
-
-## Properties
-For each class variable that is annotated, a `property` will be provided with the same name. Class variables whos annotation is also a decorated object are stored as UUID and will be resolved when their `get` method is first called.
-
 ## Limitations
-All objects are kept in memory.
+- All objects are kept in memory.
+- Sets are encoded/decoded as lists.
 
 ## Next steps
 - Explicit archiving, adding items to a `.zip` archive.

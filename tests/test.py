@@ -77,7 +77,7 @@ class TestDataObjectSystem(unittest.TestCase):
             TestObjectC(active=random.choice([True, False]),
                         tags=random.sample(string.ascii_lowercase, random.randint(1, 5)),
                         # TODO: Encode sets
-                        something={"abc": [1, 2, {True, False}]})
+                        something={"abc": [1, 2, (True, False)]})
                         # something={''.join(random.choices(string.ascii_letters, k=20)): random.randint(0, 100)})
         
         for _ in range(10):

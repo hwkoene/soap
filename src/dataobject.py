@@ -22,6 +22,7 @@ from datetime import datetime
 from functools import wraps
 from itertools import chain
 import json
+import logging
 from pathlib import Path
 from pprint import pformat
 from uuid import UUID, uuid4
@@ -122,6 +123,7 @@ class DataObjectEncoder(json.JSONEncoder):
         elif isinstance(obj, Path):
             return str(obj)
         elif isinstance(obj, set):
+            logging.warning("Encoding/decoding set as list.")
             return tuple(obj)
 
         return super().default(obj)
