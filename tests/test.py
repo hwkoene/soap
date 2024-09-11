@@ -89,17 +89,17 @@ class TestDataObjectSystem(unittest.TestCase):
             
         # Assign random references
         for obj_a in TestObjectA.all():
-            obj_a.ref_b = random.choice(TestObjectB.all())
-            obj_a.ref_c_list = random.sample(TestObjectC.all(), random.randint(1, 5))
+            obj_a.ref_b = TestObjectB.all().sample(1)[0]
+            obj_a.ref_c_list = TestObjectC.all().sample(random.randint(1, 5))
         
         for obj_b in TestObjectB.all():
-            obj_b.ref_a = random.choice(TestObjectA.all())
-            obj_b.ref_d_list = random.sample(TestObjectD.all(), random.randint(0, TestObjectD.count()))
+            obj_b.ref_a = TestObjectA.all().sample(1)[0]
+            obj_b.ref_d_list = TestObjectD.all().sample(random.randint(0, TestObjectD.count()))
             obj_b.path_list = [obj.PATH for obj in random.sample(list(chain(TestObjectA.all(), TestObjectC.all(), TestObjectD.all())), random.randint(0, 50))]        
 
         for obj_c in TestObjectC.all():
-            obj_c.ref_a = random.choice(TestObjectA.all())
-            obj_c.ref_b_list = random.sample(TestObjectB.all(), random.randint(0, TestObjectB.count()))
+            obj_c.ref_a = TestObjectA.all().sample(1)[0]
+            obj_c.ref_b_list = TestObjectB.all().sample(random.randint(0, TestObjectB.count()))
         
 
         def random_date():
@@ -118,7 +118,7 @@ class TestDataObjectSystem(unittest.TestCase):
             return datetime(year, month, day, hour, minute, second, microsecond, tzinfo=pytz.UTC)
         
         for obj_d in TestObjectD.all():
-            obj_d.ref_b = random.choice(TestObjectB.all())
+            obj_d.ref_b = TestObjectB.all().sample(1)[0]
             obj_d.datetime_list = [random_date()]*3
             
     # @classmethod
@@ -153,12 +153,12 @@ class TestDataObjectSystem(unittest.TestCase):
     def test_filter_complex(self):
         # Test filtering TestObjectC by active status and tag count
         filtered_c = TestObjectC.filter(active=True, tags=lambda t: len(t) > 2)
-        TestObjectB.filter(objects=filtered_c[0].ref_b_list, timestamp=lambda ts: ts < datetime.now())
-        obj_to_append = random.choice(TestObjectB.all())
-        filtered_c[0].ref_b_list.append(obj_to_append)
-        filtered_c[0].ref_b_list.reverse()
-        obj_to_remove = random.choice(filtered_c[0].ref_b_list)
-        filtered_c[0].ref_b_list.remove(obj_to_remove)
+        TestObjectB.filter(objects=list(filtered_c)[0].ref_b_list, timestamp=lambda ts: ts < datetime.now())
+        obj_to_append = TestObjectB.all().sample(1)[0]
+        list(filtered_c)[0].ref_b_list.append(obj_to_append)
+        list(filtered_c)[0].ref_b_list.reverse()
+        obj_to_remove = random.choice(list(filtered_c)[0].ref_b_list)
+        list(filtered_c)[0].ref_b_list.remove(obj_to_remove)
         self.assertTrue(all(obj.active and len(obj.tags) > 2 for obj in filtered_c))
 
         # Test filtering TestObjectD by priority and reference to TestObjectB
@@ -194,13 +194,13 @@ class TestDataObjectSystem(unittest.TestCase):
         self.assertTrue(all(obj.ref_a.value > 75 for obj in related_c))
 
     def test_get_by_uuid(self):
-        obj_a = random.choice(TestObjectA.all())
+        obj_a = TestObjectA.all().sample(1)[0]
         retrieved_obj = TestObjectA.get(obj_a.UUID)
         self.assertEqual(obj_a, retrieved_obj)
 
     def test_delete(self):
-        obj_to_delete = random.choice(TestObjectA.all())
-        obj_with_ref_to_deleted = random.choice(TestObjectB.all())
+        obj_to_delete = TestObjectA.all().sample(1)[0]
+        obj_with_ref_to_deleted = TestObjectB.all().sample(1)[0]
         obj_with_ref_to_deleted.ref_a = obj_to_delete
         obj_to_delete.delete()
         # NOTE: The refernce gets deleted with the first property get call to the attribute
@@ -208,8 +208,8 @@ class TestDataObjectSystem(unittest.TestCase):
         self.assertIsNone(TestObjectA.get(obj_to_delete))
         self.assertIsNone(obj_with_ref_to_deleted.ref_a)
         
-        obj_with_ref_list_to_deleted = random.choice(TestObjectA.filter(ref_c_list=lambda x: len(x) > 1))
-        obj_to_delete = random.choice(obj_with_ref_list_to_deleted.ref_c_list)
+        obj_with_ref_list_to_deleted = TestObjectA.filter(ref_c_list=lambda x: len(x) > 1).sample(1)[0]
+        obj_to_delete = random.sample(obj_with_ref_list_to_deleted.ref_c_list, 1)[0]
         obj_to_delete.delete()
         # NOTE: The refernce gets deleted with the first property get call to the attribute
         # self.assertNotIn(obj_to_delete, getattr(obj_with_ref_list_to_deleted, '__DataObject_fields')['ref_c_list'])
@@ -218,15 +218,15 @@ class TestDataObjectSystem(unittest.TestCase):
         
     def test_custom_fields(self):
         # Path
-        obj_with_path = random.choice(TestObjectD.all())
+        obj_with_path = TestObjectD.all().sample(1)[0]
         self.assertIsInstance(obj_with_path.path, Path)
-        obj_with_path_list = random.choice(TestObjectB.all())
+        obj_with_path_list = TestObjectB.all().sample(1)[0]
         self.assertTrue(all(isinstance(path, Path) for path in obj_with_path_list.path_list))
         
         # datetime
-        obj_with_datetime = random.choice(TestObjectB.all())
+        obj_with_datetime = TestObjectB.all().sample(1)[0]
         self.assertIsInstance(obj_with_datetime.timestamp, datetime)
-        obj_with_datetime_list = random.choice(TestObjectD.all())
+        obj_with_datetime_list = TestObjectD.all().sample(1)[0]
         self.assertTrue(all(isinstance(timestamp, datetime) for timestamp in obj_with_datetime_list.datetime_list))
 
 

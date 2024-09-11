@@ -25,6 +25,7 @@ import json
 import logging
 from pathlib import Path
 from pprint import pformat
+import random
 from uuid import UUID, uuid4
 import inspect
 from inspect import signature, Parameter
@@ -74,6 +75,16 @@ class DataObject:
         def sort(self, key, reverse=False) -> DataObjectList:
             return sorted(self, key=key, reverse=reverse)
         
+    class DataObjectSet(set):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            
+        def filter(self, func=__builtins__['all'], **kwargs) -> DataObjectSet:
+            return DataObject.filter(func=func, objects=self, **kwargs)
+            
+        def exclude(self, func=__builtins__['all'], **kwargs) -> DataObjectSet:
+            return DataObject.exclude(func=func, objects=self, **kwargs)
+        
     @classmethod
     def get(cls, uuid: UUID): 
         for subcls in DataObject.__types.values():
@@ -83,24 +94,24 @@ class DataObject:
                 print(f"No {subcls.__name__} object found with UUID: {uuid}")
                 
     @classmethod
-    def filter(cls, func=all, **kwargs) -> DataObjectList:
-        matches = DataObjectList()
+    def filter(cls, func=all, **kwargs) -> DataObjectSet:
+        matches = DataObjectSet()
         for subcls in DataObject.__types.values():
             if all(hasattr(subcls, k) for k in kwargs.keys()):
                 matches += subcls.filter(func=func, **kwargs)
         return matches
     
     @classmethod
-    def exclude(cls, func=all, **kwargs) -> DataObjectList:
-        matches = DataObjectList()
+    def exclude(cls, func=all, **kwargs) -> DataObjectSet:
+        matches = DataObjectSet()
         for subcls in DataObject.__types.values():
             if all(hasattr(subcls, k) for k in kwargs.keys()):
                 matches += subcls.exclude(func=func, **kwargs)
         return matches
     
     @classmethod
-    def all() -> DataObjectList:
-        instances = DataObjectList()
+    def all() -> DataObjectSet:
+        instances = DataObjectSet()
         for subcls in DataObject.__types.values():
             instances += subcls.all()
         return instances
@@ -173,8 +184,48 @@ def dataobject(cls):
         def clear(self, *args, **kwargs):
             return super().clear(*args, **kwargs)
 
+    class DataObjectSet(set):
+        def __init__(self, *args, **kwargs):
+            self.__container__ = None
+            super().__init__(*args, **kwargs)
+        
+        def filter(self, func=__builtins__['all'], **kwargs) -> DataObjectSet:
+            return cls.filter(func=func, objects=self, **kwargs)
+            
+        def exclude(self, func=__builtins__['all'], **kwargs) -> DataObjectSet:
+            return cls.exclude(func=func, objects=self, **kwargs)
+        
+        def sample(self, k) -> DataObjectList:
+            return DataObjectList(random.sample(list(self), k))
+        
+        def save_after(func):
+            
+            @wraps(func)
+            def wrapper(self, *args, **kwargs):
+                res = func(self, *args, **kwargs)
+                if self.__container__:
+                    self.__container__.save(check=False)
+                return res
+            return wrapper
+        
+        @save_after
+        def add(self, *args, **kwargs):
+            return super().add(*args, **kwargs)
+        
+        @save_after
+        def remove(self, *args, **kwargs):
+            return super().remove(*args, **kwargs)
+        
+        @save_after
+        def pop(self, *args, **kwargs):
+            return super().pop(*args, **kwargs)
+        
+        @save_after
+        def clear(self, *args, **kwargs):
+            return super().clear(*args, **kwargs)
+        
     # Keep track of class instances
-    setattr(cls, '__DataObject_instances', DataObjectList())
+    setattr(cls, '__DataObject_instances', DataObjectSet())
     setattr(cls, '__DataObject_directory', DataObject._DataObject__directory / cls.__name__)
    
     # Set object methods 
@@ -205,7 +256,7 @@ def dataobject(cls):
     class_annotations = inspect.get_annotations(cls)
     def __init__(self, **kwargs):
         # Set standard attributes and create file if necessary
-        getattr(cls, '__DataObject_instances').append(self)
+        getattr(cls, '__DataObject_instances').add(self)
         setattr(self, '__DataObject_fields', {})
         setattr(self, '__DataObject_uuid', kwargs.get('uuid', uuid4()))
         setattr(self, '__DataObject_deleted', False)
@@ -255,7 +306,7 @@ def dataobject(cls):
     DataObject._DataObject__types[cls.__name__] = cls
     
     for field_name, field_type in class_annotations.items():
-        setattr(cls, field_name, make_property(cls, field_name, field_type, DataObjectList))
+        setattr(cls, field_name, make_property(cls, field_name, field_type, DataObjectList, DataObjectSet))
     
     # Define classmethods
     def check(obj, func, invert, values, callables):        
@@ -271,22 +322,23 @@ def dataobject(cls):
     setattr(cls, 'get', get)
         
     @classmethod
-    def filter(cls, func=__builtins__['all'], objects=cls.__DataObject_instances, **kwargs) -> DataObjectList:
+    def filter(cls, func=__builtins__['all'], objects=cls.__DataObject_instances, **kwargs) -> DataObjectSet:
         values = {k: v for k, v in kwargs.items() if not callable(v)}
         callables = {k: v for k, v in kwargs.items() if callable(v)}
-        return DataObjectList([obj for obj in objects if check(obj, func, invert=False, values=values, callables=callables)])
+        return DataObjectSet({obj for obj in objects if check(obj, func, invert=False, values=values, callables=callables)})
     setattr(cls, 'filter', filter)
     
     @classmethod
-    def exclude(cls, func=__builtins__['all'], objects=cls.__DataObject_instances, **kwargs) -> DataObjectList:
+    def exclude(cls, func=__builtins__['all'], objects=cls.__DataObject_instances, **kwargs) -> DataObjectSet:
         values = {k: v for k, v in kwargs.items() if not callable(v)}
         callables = {k: v for k, v in kwargs.items() if callable(v)}
-        return DataObjectList([obj for obj in objects if check(obj, func, invert=True, values=values, callables=callables)])
+        return DataObjectSet({obj for obj in objects if check(obj, func, invert=True, values=values, callables=callables)})
     setattr(cls, 'exclude', exclude)
     
     @classmethod
-    def all(cls) -> DataObjectList:
-        return DataObjectList(cls.__DataObject_instances)
+    def all(cls) -> DataObjectSet:
+        # return DataObjectSet(cls.__DataObject_instances)
+        return cls.__DataObject_instances
     setattr(cls, 'all', all)
     
     @classmethod

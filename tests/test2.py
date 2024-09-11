@@ -27,7 +27,7 @@ class MyClassA:
     name: str
     health: int = 100
     my_path: Path = None
-    inventory: list['MyClassB'] = []
+    inventory: set['MyClassB'] = set()
     
 @dataobject
 class MyClassB:
@@ -46,8 +46,8 @@ b2 = MyClassB(daddy=a2,
               timestamp=b1.timestamp, 
               other_items=[b1])
 
-a1.inventory.append(b1)
-a2.inventory.append(b2)
+a1.inventory.add(b1)
+a2.inventory.add(b2)
 
 cheese_i_have = a1.inventory.filter(other_items=lambda x: "Some cheese" in x)
 steve_not_my_daddy = MyClassB.exclude(daddy=lambda x: x.name.startswith('Steve'))

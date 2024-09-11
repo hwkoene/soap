@@ -23,7 +23,7 @@ from typing import get_args, get_origin
 from uuid import UUID
 
 
-def make_property(cls, field_name: str, field_type: str | type, data_object_list_class: type):
+def make_property(cls, field_name: str, field_type: str | type, data_object_list_class: type, data_object_set_class: type):
     """Use the annotations to get the value of the field.
 
     Args:
@@ -74,11 +74,36 @@ def make_property(cls, field_name: str, field_type: str | type, data_object_list
             
         return self.__DataObject_fields[field_name]
     
+    def set_setter(self, value):
+        self.__DataObject_fields[field_name] = data_object_set_class(value)
+        setattr(self.__DataObject_fields[field_name], '__container__', self)
+        self.save()
+    
     # TODO: Generalise and allow for custom types
     def set_getter(self):
-        value_type = type(self.__DataObject_fields[field_name])
-        if value_type is set:
-            self.__DataObject_fields[field_name] = datetime.fromtimestamp(self.__DataObject_fields[field_name])
+        # Determine if the list contains referces to other dataobjects (list[DataObject] or list['DataObject'])
+        value_type = get_args(field_type)[0]
+        if value_type in self._DataObject__types.keys():
+            obj_get = cls._DataObject__types[value_type].get
+        elif value_type in self._DataObject__types.values():
+            obj_get = value_type.get
+        else:
+            obj_get = None
+        
+        if obj_get:
+            if __builtins__['all'](isinstance(obj, (str, UUID)) for obj in self.__DataObject_fields[field_name]):
+                self.__DataObject_fields[field_name] = data_object_set_class({obj_get(item) for item in self.__DataObject_fields[field_name]})
+                setattr(self.__DataObject_fields[field_name], '__container__', self)
+                   
+            outdated = False       
+            for item in self.__DataObject_fields[field_name]:
+                if item is None or getattr(item, '__DataObject_deleted'):
+                    outdated = True
+                    self.__DataObject_fields[field_name].remove(item)
+            
+            if outdated:
+                self.save(check=False)
+            
         return self.__DataObject_fields[field_name]
     
     # TODO: Generalise and allow for custom types
@@ -88,7 +113,6 @@ def make_property(cls, field_name: str, field_type: str | type, data_object_list
             self.__DataObject_fields[field_name] = datetime.fromtimestamp(self.__DataObject_fields[field_name])
         return self.__DataObject_fields[field_name]
     
-    # TODO: Generalise and allow for custom types
     def path_getter(self):
         value_type = type(self.__DataObject_fields[field_name])
         if value_type is str:
@@ -134,7 +158,7 @@ def make_property(cls, field_name: str, field_type: str | type, data_object_list
         
         # Generic alias iterable fields
         elif get_origin(field_type) is set:
-            return property(fget=set_getter, fset=list_setter)
+            return property(fget=set_getter, fset=set_setter)
             
         # DataObject
         elif field_type.__name__ in cls._DataObject__types.keys():
@@ -149,8 +173,8 @@ def make_property(cls, field_name: str, field_type: str | type, data_object_list
         return property(fget=list_getter, fset=list_setter)
     
     # Generic alias iterable fields (Python 3.12)
-    elif get_origin(field_type) is list:
-        return property(fget=set_getter, fset=default_setter)
+    elif get_origin(field_type) is set:
+            return property(fget=set_getter, fset=set_setter)
     
     # 'DataObject'
     elif isinstance(field_type, str):
