@@ -15,7 +15,7 @@ class MyClassA:
     name: str
     health: int = 100
     my_path: Path = None
-    inventory: list['MyClassB'] = [] # One-to-many
+    inventory: set['MyClassB'] = set() # One-to-many
 ```
 This creates an `__init__` with the default arguments of the class variables.
 
@@ -42,11 +42,11 @@ b2 = MyClassB(daddy=a2,
               other_items=[b1])
 ```
 
-Because `MyClassA.inventory` is annotated with `list['MyClassB']`[^1], the `getattr` function returns a `DataObjectList` type.
+Because `MyClassA.inventory` is annotated with `set['MyClassB']`[^1], the `getattr` function returns a `DataObjectList` type.
 This is basically a `list` with `filter()` and `exlude()` methods to perfor queries.
 Additionally, operations like `append` and `remove` are wrapped to save the object afterwards.
 
-[^1]: Behaviour is similar with annotations like `MyClassX`, `'MyClassX'`, `list[MyClassX]`.
+[^1]: Behaviour is similar with annotations like `MyClassX`, `'MyClassX'`, `set[MyClassX]`, `list[MyClassX]`, `list['MyClassX']`.
 
 ```python
 a1.inventory.append(b1)
@@ -70,4 +70,3 @@ print(type(a1.inventory))       # <class 'src.dataobject.dataobject.<locals>.Dat
 - Explicit archiving, adding items to a `.zip` archive.
 - Allow creaton/modification/deletion of objects from files using watchdog to monitor the data directory for changes.
     - This may allow this framework to function as a synchronized database.
-- Maybe replacing or supplementing DataObjectList with DataObjectSet to allow for more complex queries.

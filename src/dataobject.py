@@ -264,6 +264,7 @@ def dataobject(cls):
         setattr(self, '__DataObject_path', getattr(self, '__DataObject_directory') / str(getattr(self, '__DataObject_uuid')))
         getattr(self, '__DataObject_path').touch(exist_ok=True)
         setattr(cls, '__str__', lambda x: pformat(getattr(self, '__DataObject_fields')))
+        # TODO: UUID and PATH should be properties without a settter
         setattr(self, 'UUID', getattr(self, '__DataObject_uuid'))
         setattr(self, 'PATH', getattr(self, '__DataObject_path'))
         
