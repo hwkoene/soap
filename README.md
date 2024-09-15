@@ -63,10 +63,16 @@ print(type(a1.inventory))       # <class 'src.dataobject.dataobject.<locals>.Dat
 ```
 
 ## Limitations
-- All objects are kept in memory.
-- Currently, only `datetime` and `Path` objects are transcoded besides the builtins.
+1. All objects are kept in memory.
+2. Currently, only `datetime` and `Path` objects are transcoded besides the builtins.
 
 ## Next steps
-- Explicit archiving, adding items to a `.zip` archive.
+- Explicit archiving, adding items to a `.zip` archive (to partially address limitation #2).
+- Derive date created from file metadata.
+- Option to disable implicit saving.
+- Custom transcoders (to address limitation #1).
 - Allow creaton/modification/deletion of objects from files using watchdog to monitor the data directory for changes.
     - This may allow this framework to function as a synchronized database.
+- Optional integrations:
+    - NiceGUI to have some kind of admin page.
+- Further exploration of opportunities and limitations.
