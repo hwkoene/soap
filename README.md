@@ -72,7 +72,10 @@ print(type(a1.inventory))       # <class 'src.dataobject.dataobject.<locals>.Dat
 - Option to disable implicit saving.
 - Custom transcoders (to address limitation #1).
 - Allow creaton/modification/deletion of objects from files using watchdog to monitor the data directory for changes.
-    - This may allow this framework to function as a synchronized database.
+    - This may allow this framework to function as a synchronized database when combined with something like `portalocker`.j
+- CSV file writing.
 - Optional integrations:
     - NiceGUI to have some kind of admin page.
+- Saving asynchronously.
+
 - Further exploration of opportunities and limitations.
