@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+# --- Built-in ---
 from __future__ import annotations
 from datetime import datetime
 from functools import wraps
@@ -30,7 +31,7 @@ from uuid import UUID, uuid4
 import inspect
 from inspect import signature, Parameter
 
-# --- 
+# --- Internal ---
 from src.properties import make_property
 
 
@@ -242,6 +243,10 @@ def dataobject(cls):
         
     # Save the object
     def save(self, check=True):
+        if not getattr(self, '__DataObject_saving'):
+            logging.warning("Saving is disabled for this object!")
+            return
+        
         if check:
             for field_name in self.__DataObject_fields.keys():
                 getattr(self, field_name)
@@ -257,6 +262,7 @@ def dataobject(cls):
     def __init__(self, **kwargs):
         # Set standard attributes and create file if necessary
         getattr(cls, '__DataObject_instances').add(self)
+        setattr(self, '__DataObject_saving', True)
         setattr(self, '__DataObject_fields', {})
         setattr(self, '__DataObject_uuid', kwargs.get('uuid', uuid4()))
         setattr(self, '__DataObject_deleted', False)
