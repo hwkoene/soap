@@ -124,6 +124,10 @@ class DataObject:
             counter += subcls.count()
         return counter
     
+    @classmethod
+    def export() -> None:
+        raise NotImplementedError("This function should export all dataobjects to their own tab in a .csv file.")
+    
 class DataObjectEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, DataObject):

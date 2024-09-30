@@ -67,15 +67,15 @@ print(type(a1.inventory))       # <class 'src.dataobject.dataobject.<locals>.Dat
 2. Currently, only `datetime` and `Path` objects are transcoded besides the builtins.
 
 ## Next steps
-- Explicit archiving, adding items to a `.zip` archive (to partially address limitation #2).
-- Derive date created from file metadata.
-- Option to disable implicit saving.
-- Custom transcoders (to address limitation #1).
-- Allow creaton/modification/deletion of objects from files using watchdog to monitor the data directory for changes.
-    - This may allow this framework to function as a synchronized database when combined with something like `portalocker`.j
-- CSV file writing.
+- Explicit archiving, adding items to a `.zip` archive (to partially address limitation #1);
+- Option to disable implicit saving;
+    - Combine with a `rollback` function to implement transactions;
+- Custom transcoders (to address limitation #2);
+- Typechecking for getters and setters;
+- Derive date created from file metadata;
+- Allow creaton/modification/deletion of objects from files using watchdog to monitor the data directory for changes;
+    - This may allow this framework to function as a synchronized database when combined with something like `portalocker`;
+- CSV file writing of all objects;
 - Optional integrations:
-    - NiceGUI to have some kind of admin page.
-- Saving asynchronously.
-
-- Further exploration of opportunities and limitations.
+    - NiceGUI to have some kind of admin page;
+- Saving asynchronously;
