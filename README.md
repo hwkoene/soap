@@ -73,6 +73,7 @@ print(type(a1.inventory))       # <class 'src.dataobject.dataobject.<locals>.Dat
 - Custom transcoders (to address limitation #2);
 - Typechecking for getters and setters;
 - Derive date created from file metadata;
+- Custom assignment of data folder;
 - Allow creaton/modification/deletion of objects from files using watchdog to monitor the data directory for changes;
     - This may allow this framework to function as a synchronized database when combined with something like `portalocker`;
 - CSV file writing of all objects;
