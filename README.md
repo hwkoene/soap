@@ -64,6 +64,7 @@ print(type(a1.inventory))       # <class 'src.dataobject.dataobject.<locals>.Dat
 
 ## Limitations
 1. All objects are kept in memory.
+    - When an object is deleted, it is not directly removed from memory because other objects may still have a reference to it. 
 2. Currently, only `datetime` and `Path` objects are transcoded besides the builtins.
 
 ## Next steps
@@ -80,3 +81,8 @@ print(type(a1.inventory))       # <class 'src.dataobject.dataobject.<locals>.Dat
 - Optional integrations:
     - NiceGUI to have some kind of admin page;
 - Saving asynchronously;
+- Use a profiler to identify bottlenecks.
+
+## Issues
+- Deleting an object and then terminating the program may cause invalid refereces, which in turn may cause errors.
+- Invalid files cause errors.
