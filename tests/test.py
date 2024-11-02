@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from itertools import chain
 from pathlib import Path
 import unittest
-from src.dataobject import DataObject, dataobject
+from src.dataobject import dataobject
 import random
 import string
 from datetime import datetime, timedelta

@@ -185,6 +185,7 @@ def dataobject(cls):
             return DataObjectList(random.sample(list(self), k))
 
         def save_after(func):
+            # Save after editing a DataObjectSet or DataObjectList
             @wraps(func)
             def wrapper(self, *args, **kwargs):
                 res = func(self, *args, **kwargs)
@@ -236,6 +237,7 @@ def dataobject(cls):
             logging.warning("Saving is disabled for this object!")
             return
 
+        # Update all references to other objects to remove invalid ones.
         if check:
             for field_name in self.__DataObject_fields.keys():
                 getattr(self, field_name)
@@ -321,6 +323,7 @@ def dataobject(cls):
     cls = type(cls.__name__, (DataObject, cls), {})
     DataObject._DataObject__types[cls.__name__] = cls
 
+    # Create getters and setters for each field
     for field_name, field_type in class_annotations.items():
         setattr(
             cls,
@@ -328,8 +331,10 @@ def dataobject(cls):
             make_property(cls, field_name, field_type, DataObjectList, DataObjectSet),
         )
 
-    # Define classmethods
-    def check(obj, func, invert, values, callables):
+    def _check(obj, func, invert, values, callables):
+        """
+        Check if an object satisfies the query values and lambdas in 'filter' or 'exclude'.
+        """
         if func(
             chain(
                 ((getattr(obj, k) == v) for k, v in values.items()),
@@ -363,7 +368,7 @@ def dataobject(cls):
             {
                 obj
                 for obj in objects
-                if check(obj, func, invert=False, values=values, callables=callables)
+                if _check(obj, func, invert=False, values=values, callables=callables)
             }
         )
 
@@ -379,7 +384,7 @@ def dataobject(cls):
             {
                 obj
                 for obj in objects
-                if check(obj, func, invert=True, values=values, callables=callables)
+                if _check(obj, func, invert=True, values=values, callables=callables)
             }
         )
 
