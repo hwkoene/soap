@@ -1,5 +1,5 @@
 """
-The DataObject package provides a single-decorator way to persist Python objects.
+The Entity package provides a single-decorator way to persist Python objects.
 It acts like a filesystem variant of an ORM.
 Copyright (C) 2024 Hans Koene
 
@@ -27,8 +27,8 @@ def make_property(
     cls,
     field_name: str,
     field_type: str | type,
-    data_object_list_class: type,
-    data_object_set_class: type,
+    entity_list_class: type,
+    entity_set_class: type,
 ):
     """Use the annotations to get the value of the field.
 
@@ -43,23 +43,23 @@ def make_property(
     """
 
     def default_setter(self, value):
-        self.__DataObject_fields[field_name] = value
+        self.__Entity_fields[field_name] = value
         self.save()
 
     def default_getter(self):
-        return self.__DataObject_fields[field_name]
+        return self.__Entity_fields[field_name]
 
     def list_setter(self, value):
-        self.__DataObject_fields[field_name] = data_object_list_class(value)
-        setattr(self.__DataObject_fields[field_name], "__container__", self)
+        self.__Entity_fields[field_name] = entity_list_class(value)
+        setattr(self.__Entity_fields[field_name], "__container__", self)
         self.save()
 
     def list_getter(self):
-        # Determine if the list contains referces to other dataobjects (list[DataObject] or list['DataObject'])
+        # Determine if the list contains referces to other entities (list[Entity] or list['Entity'])
         value_type = get_args(field_type)[0]
-        if value_type in self._DataObject__types.keys():
-            obj_get = cls._DataObject__types[value_type].get
-        elif value_type in self._DataObject__types.values():
+        if value_type in self._Entity__types.keys():
+            obj_get = cls._Entity__types[value_type].get
+        elif value_type in self._Entity__types.values():
             obj_get = value_type.get
         else:
             obj_get = None
@@ -67,36 +67,36 @@ def make_property(
         if obj_get:
             if __builtins__["all"](
                 isinstance(obj, (str, UUID))
-                for obj in self.__DataObject_fields[field_name]
+                for obj in self.__Entity_fields[field_name]
             ):
-                self.__DataObject_fields[field_name] = data_object_list_class(
-                    [obj_get(item) for item in self.__DataObject_fields[field_name]]
+                self.__Entity_fields[field_name] = entity_list_class(
+                    [obj_get(item) for item in self.__Entity_fields[field_name]]
                 )
-                setattr(self.__DataObject_fields[field_name], "__container__", self)
+                setattr(self.__Entity_fields[field_name], "__container__", self)
 
             outdated = False
-            for item in self.__DataObject_fields[field_name]:
-                if item is None or getattr(item, "__DataObject_deleted"):
+            for item in self.__Entity_fields[field_name]:
+                if item is None or getattr(item, "__Entity_deleted"):
                     outdated = True
-                    self.__DataObject_fields[field_name].remove(item)
+                    self.__Entity_fields[field_name].remove(item)
 
             if outdated:
                 self.save(check=False)
 
-        return self.__DataObject_fields[field_name]
+        return self.__Entity_fields[field_name]
 
     def set_setter(self, value):
-        self.__DataObject_fields[field_name] = data_object_set_class(value)
-        setattr(self.__DataObject_fields[field_name], "__container__", self)
+        self.__Entity_fields[field_name] = entity_set_class(value)
+        setattr(self.__Entity_fields[field_name], "__container__", self)
         self.save()
 
     # TODO: Generalise and allow for custom types
     def set_getter(self):
-        # Determine if the list contains referces to other dataobjects (list[DataObject] or list['DataObject'])
+        # Determine if the list contains referces to other entities (list[Entity] or list['Entity'])
         value_type = get_args(field_type)[0]
-        if value_type in self._DataObject__types.keys():
-            obj_get = cls._DataObject__types[value_type].get
-        elif value_type in self._DataObject__types.values():
+        if value_type in self._Entity__types.keys():
+            obj_get = cls._Entity__types[value_type].get
+        elif value_type in self._Entity__types.values():
             obj_get = value_type.get
         else:
             obj_get = None
@@ -104,66 +104,66 @@ def make_property(
         if obj_get:
             if __builtins__["all"](
                 isinstance(obj, (str, UUID))
-                for obj in self.__DataObject_fields[field_name]
+                for obj in self.__Entity_fields[field_name]
             ):
-                self.__DataObject_fields[field_name] = data_object_set_class(
-                    {obj_get(item) for item in self.__DataObject_fields[field_name]}
+                self.__Entity_fields[field_name] = entity_set_class(
+                    {obj_get(item) for item in self.__Entity_fields[field_name]}
                 )
-                setattr(self.__DataObject_fields[field_name], "__container__", self)
+                setattr(self.__Entity_fields[field_name], "__container__", self)
 
             outdated = False
-            for item in self.__DataObject_fields[field_name]:
-                if item is None or getattr(item, "__DataObject_deleted"):
+            for item in self.__Entity_fields[field_name]:
+                if item is None or getattr(item, "__Entity_deleted"):
                     outdated = True
-                    self.__DataObject_fields[field_name].remove(item)
+                    self.__Entity_fields[field_name].remove(item)
 
             if outdated:
                 self.save(check=False)
 
-        return self.__DataObject_fields[field_name]
+        return self.__Entity_fields[field_name]
 
     # TODO: Generalise and allow for custom types
     def datetime_getter(self):
-        value_type = type(self.__DataObject_fields[field_name])
+        value_type = type(self.__Entity_fields[field_name])
         if value_type is float:
-            self.__DataObject_fields[field_name] = datetime.fromtimestamp(
-                self.__DataObject_fields[field_name]
+            self.__Entity_fields[field_name] = datetime.fromtimestamp(
+                self.__Entity_fields[field_name]
             )
-        return self.__DataObject_fields[field_name]
+        return self.__Entity_fields[field_name]
 
     def path_getter(self):
-        value_type = type(self.__DataObject_fields[field_name])
+        value_type = type(self.__Entity_fields[field_name])
         if value_type is str:
-            self.__DataObject_fields[field_name] = Path(
-                self.__DataObject_fields[field_name]
+            self.__Entity_fields[field_name] = Path(
+                self.__Entity_fields[field_name]
             )
-        return self.__DataObject_fields[field_name]
+        return self.__Entity_fields[field_name]
 
-    def dataobject_getter(self):
-        if isinstance(self.__DataObject_fields[field_name], (str, UUID)):
-            self.__DataObject_fields[field_name] = field_type.get(
-                self.__DataObject_fields[field_name]
+    def entities_getter(self):
+        if isinstance(self.__Entity_fields[field_name], (str, UUID)):
+            self.__Entity_fields[field_name] = field_type.get(
+                self.__Entity_fields[field_name]
             )
 
         if (
-            self.__DataObject_fields[field_name] is not None
-            and self.__DataObject_fields[field_name].__DataObject_deleted
+            self.__Entity_fields[field_name] is not None
+            and self.__Entity_fields[field_name].__Entity_deleted
         ):
-            self.__DataObject_fields[field_name] = None
+            self.__Entity_fields[field_name] = None
             self.save(check=False)
             return None
 
-        return self.__DataObject_fields[field_name]
+        return self.__Entity_fields[field_name]
 
     def str_getter(self):
-        field_value = self.__DataObject_fields[field_name]
-        if field_type in self._DataObject__types.keys():
+        field_value = self.__Entity_fields[field_name]
+        if field_type in self._Entity__types.keys():
             if isinstance(field_value, (str, UUID)):
-                field_value = cls._DataObject__types[field_type].get(field_value)
+                field_value = cls._Entity__types[field_type].get(field_value)
 
-            # if field_value is not None and field_value.__DataObject_deleted:
-            if field_value is not None and field_value.__DataObject_deleted:
-                self.__DataObject_fields[field_name] = None
+            # if field_value is not None and field_value.__Entity_deleted:
+            if field_value is not None and field_value.__Entity_deleted:
+                self.__Entity_fields[field_name] = None
                 self.save(check=False)
                 return None
 
@@ -185,9 +185,9 @@ def make_property(
         elif get_origin(field_type) is set:
             return property(fget=set_getter, fset=set_setter)
 
-        # DataObject
-        elif field_type.__name__ in cls._DataObject__types.keys():
-            return property(fget=dataobject_getter, fset=default_setter)
+        # Entity
+        elif field_type.__name__ in cls._Entity__types.keys():
+            return property(fget=entities_getter, fset=default_setter)
 
         # Resolve regular fields
         else:
@@ -201,7 +201,7 @@ def make_property(
     elif get_origin(field_type) is set:
         return property(fget=set_getter, fset=set_setter)
 
-    # 'DataObject'
+    # 'Entity'
     elif isinstance(field_type, str):
         return property(fget=str_getter, fset=default_setter)
 

@@ -1,5 +1,5 @@
 """
-The DataObject package provides a single-decorator way to persist Python objects.
+The Entity package provides a single-decorator way to persist Python objects.
 It acts like a filesystem variant of an ORM.
 Copyright (C) 2024 Hans Koene
 
@@ -20,16 +20,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from datetime import datetime
 from pathlib import Path
 import random
-from src.dataobject import dataobject
+from src.entity import entity
 
-@dataobject
+@entity
 class MyClassA:
     name: str
     health: int = 100
     my_path: Path = None
     inventory: set['MyClassB'] = set()
     
-@dataobject
+@entity
 class MyClassB:
     daddy: MyClassA
     other_items: list
@@ -54,5 +54,5 @@ steve_not_my_daddy = MyClassB.exclude(daddy=lambda x: x.name.startswith('Steve')
 print(cheese_i_have)        # {b1}
 print(steve_not_my_daddy)   # {b1}
 
-print(type(steve_not_my_daddy)) # <class 'src.dataobject.dataobject.<locals>.DataObjectList'>
-print(type(a1.inventory))       # <class 'src.dataobject.dataobject.<locals>.DataObjectList'>
+print(type(steve_not_my_daddy)) # <class 'src.entities.entities.<locals>.EntityList'>
+print(type(a1.inventory))       # <class 'src.entities.entities.<locals>.EntityList'>

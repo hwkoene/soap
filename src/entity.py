@@ -1,5 +1,5 @@
 """
-The DataObject package provides a single-decorator way to persist Python objects.
+The Entity package provides a single-decorator way to persist Python objects.
 It acts like a filesystem variant of an ORM.
 Copyright (C) 2024 Hans Koene
 
@@ -32,85 +32,85 @@ import inspect
 from inspect import signature, Parameter
 
 # --- Internal ---
-from properties import make_property
+from src.properties import make_property
 
 
-class DataObject:
+class Entity:
     __types: dict[str, __qualname__] = {}
-    __directory: Path = Path.cwd() / "data"
+    __directory: Path = Path.cwd() / "__data__"
     __directory.mkdir(exist_ok=True)
 
-    class DataObjectList(list):
+    class EntityList(list):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
 
-        def filter(self, func=__builtins__["all"], **kwargs) -> DataObjectList:
-            return DataObject.filter(func=func, objects=self, **kwargs)
+        def filter(self, func=__builtins__["all"], **kwargs) -> EntityList:
+            return Entity.filter(func=func, objects=self, **kwargs)
 
-        def exclude(self, func=__builtins__["all"], **kwargs) -> DataObjectList:
-            return DataObject.exclude(func=func, objects=self, **kwargs)
+        def exclude(self, func=__builtins__["all"], **kwargs) -> EntityList:
+            return Entity.exclude(func=func, objects=self, **kwargs)
 
-        def sort(self, key, reverse=False) -> DataObjectList:
+        def sort(self, key, reverse=False) -> EntityList:
             return sorted(self, key=key, reverse=reverse)
 
-    class DataObjectSet(set):
+    class EntitySet(set):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
 
-        def filter(self, func=__builtins__["all"], **kwargs) -> DataObjectSet:
-            return DataObject.filter(func=func, objects=self, **kwargs)
+        def filter(self, func=__builtins__["all"], **kwargs) -> EntitySet:
+            return Entity.filter(func=func, objects=self, **kwargs)
 
-        def exclude(self, func=__builtins__["all"], **kwargs) -> DataObjectSet:
-            return DataObject.exclude(func=func, objects=self, **kwargs)
+        def exclude(self, func=__builtins__["all"], **kwargs) -> EntitySet:
+            return Entity.exclude(func=func, objects=self, **kwargs)
 
     @classmethod
     def get(cls, uuid: UUID):
-        for subcls in DataObject.__types.values():
+        for subcls in Entity.__types.values():
             try:
                 return subcls.get(uuid)
             except StopIteration:
                 print(f"No {subcls.__name__} object found with UUID: {uuid}")
 
     @classmethod
-    def filter(cls, func=all, **kwargs) -> DataObjectSet:
-        matches = DataObjectSet()
-        for subcls in DataObject.__types.values():
+    def filter(cls, func=all, **kwargs) -> EntitySet:
+        matches = EntitySet()
+        for subcls in Entity.__types.values():
             if all(hasattr(subcls, k) for k in kwargs.keys()):
                 matches += subcls.filter(func=func, **kwargs)
         return matches
 
     @classmethod
-    def exclude(cls, func=all, **kwargs) -> DataObjectSet:
-        matches = DataObjectSet()
-        for subcls in DataObject.__types.values():
+    def exclude(cls, func=all, **kwargs) -> EntitySet:
+        matches = EntitySet()
+        for subcls in Entity.__types.values():
             if all(hasattr(subcls, k) for k in kwargs.keys()):
                 matches += subcls.exclude(func=func, **kwargs)
         return matches
 
     @classmethod
-    def all() -> DataObjectSet:
-        instances = DataObjectSet()
-        for subcls in DataObject.__types.values():
+    def all() -> EntitySet:
+        instances = EntitySet()
+        for subcls in Entity.__types.values():
             instances += subcls.all()
         return instances
 
     @classmethod
     def count(cls) -> int:
         counter = 0
-        for subcls in DataObject.__types.values():
+        for subcls in Entity.__types.values():
             counter += subcls.count()
         return counter
 
     @classmethod
     def export() -> None:
         raise NotImplementedError(
-            "This function should export all dataobjects to their own tab in a .csv file."
+            "This function should export all entities to their own tab in a .csv file."
         )
 
 
-class DataObjectEncoder(json.JSONEncoder):
+class EntityEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, DataObject):
+        if isinstance(obj, Entity):
             return obj.UUID
         elif isinstance(obj, UUID):
             return str(obj)
@@ -124,16 +124,16 @@ class DataObjectEncoder(json.JSONEncoder):
         return super().default(obj)
 
 
-def dataobject(cls):
-    class DataObjectList(list):
+def entity(cls):
+    class EntityList(list):
         def __init__(self, *args, **kwargs):
             self.__container__ = None
             super().__init__(*args, **kwargs)
 
-        def filter(self, func=__builtins__["all"], **kwargs) -> DataObjectList:
+        def filter(self, func=__builtins__["all"], **kwargs) -> EntityList:
             return cls.filter(func=func, objects=self, **kwargs)
 
-        def exclude(self, func=__builtins__["all"], **kwargs) -> DataObjectList:
+        def exclude(self, func=__builtins__["all"], **kwargs) -> EntityList:
             return cls.exclude(func=func, objects=self, **kwargs)
 
         def save_after(func):
@@ -170,22 +170,22 @@ def dataobject(cls):
         def clear(self, *args, **kwargs):
             return super().clear(*args, **kwargs)
 
-    class DataObjectSet(set):
+    class EntitySet(set):
         def __init__(self, *args, **kwargs):
             self.__container__ = None
             super().__init__(*args, **kwargs)
 
-        def filter(self, func=__builtins__["all"], **kwargs) -> DataObjectSet:
+        def filter(self, func=__builtins__["all"], **kwargs) -> EntitySet:
             return cls.filter(func=func, objects=self, **kwargs)
 
-        def exclude(self, func=__builtins__["all"], **kwargs) -> DataObjectSet:
+        def exclude(self, func=__builtins__["all"], **kwargs) -> EntitySet:
             return cls.exclude(func=func, objects=self, **kwargs)
 
-        def sample(self, k) -> DataObjectList:
-            return DataObjectList(random.sample(list(self), k))
+        def sample(self, k) -> EntityList:
+            return EntityList(random.sample(list(self), k))
 
         def save_after(func):
-            # Save after editing a DataObjectSet or DataObjectList
+            # Save after editing a EntitySet or EntityList
             @wraps(func)
             def wrapper(self, *args, **kwargs):
                 res = func(self, *args, **kwargs)
@@ -212,9 +212,9 @@ def dataobject(cls):
             return super().clear(*args, **kwargs)
 
     # Keep track of class instances
-    setattr(cls, "__DataObject_instances", DataObjectSet())
+    setattr(cls, "__Entity_instances", EntitySet())
     setattr(
-        cls, "__DataObject_directory", DataObject._DataObject__directory / cls.__name__
+        cls, "__Entity_directory", Entity._Entity__directory / cls.__name__
     )
 
     # Set object methods
@@ -224,27 +224,27 @@ def dataobject(cls):
     setattr(cls, "date_created", date_created)
 
     def delete(self):
-        setattr(self, "__DataObject_deleted", True)
-        setattr(self, "__DataObject_uuid", None)
-        self.__class__.__DataObject_instances.remove(self)
+        setattr(self, "__Entity_deleted", True)
+        setattr(self, "__Entity_uuid", None)
+        self.__class__.__Entity_instances.remove(self)
         self.PATH.unlink()
 
     setattr(cls, "delete", delete)
 
     # Save the object
     def save(self, check=True):
-        if not getattr(self, "__DataObject_saving"):
+        if not getattr(self, "__Entity_saving"):
             logging.warning("Saving is disabled for this object!")
             return
 
         # Update all references to other objects to remove invalid ones.
         if check:
-            for field_name in self.__DataObject_fields.keys():
+            for field_name in self.__Entity_fields.keys():
                 getattr(self, field_name)
 
-        with self.__DataObject_path.open("w", encoding="utf-8") as file:
+        with self.__Entity_path.open("w", encoding="utf-8") as file:
             json.dump(
-                self.__DataObject_fields, file, indent="\t", cls=DataObjectEncoder
+                self.__Entity_fields, file, indent="\t", cls=EntityEncoder
             )
 
     setattr(cls, "save", save)
@@ -255,23 +255,23 @@ def dataobject(cls):
 
     def __init__(self, **kwargs):
         # Set standard attributes and create file if necessary
-        getattr(cls, "__DataObject_instances").add(self)
-        setattr(self, "__DataObject_saving", True)
-        setattr(self, "__DataObject_fields", {})
-        setattr(self, "__DataObject_uuid", kwargs.get("uuid", uuid4()))
-        setattr(self, "__DataObject_deleted", False)
+        getattr(cls, "__Entity_instances").add(self)
+        setattr(self, "__Entity_saving", True)
+        setattr(self, "__Entity_fields", {})
+        setattr(self, "__Entity_uuid", kwargs.get("uuid", uuid4()))
+        setattr(self, "__Entity_deleted", False)
         kwargs.pop("uuid", None)
         setattr(
             self,
-            "__DataObject_path",
-            getattr(self, "__DataObject_directory")
-            / str(getattr(self, "__DataObject_uuid")),
+            "__Entity_path",
+            getattr(self, "__Entity_directory")
+            / str(getattr(self, "__Entity_uuid")),
         )
-        getattr(self, "__DataObject_path").touch(exist_ok=True)
-        setattr(cls, "__str__", lambda x: pformat(getattr(self, "__DataObject_fields")))
+        getattr(self, "__Entity_path").touch(exist_ok=True)
+        setattr(cls, "__str__", lambda x: pformat(getattr(self, "__Entity_fields")))
         # TODO: UUID and PATH should be properties without a settter
-        setattr(self, "UUID", getattr(self, "__DataObject_uuid"))
-        setattr(self, "PATH", getattr(self, "__DataObject_path"))
+        setattr(self, "UUID", getattr(self, "__Entity_uuid"))
+        setattr(self, "PATH", getattr(self, "__Entity_path"))
 
         # Read class variable annotations and defautls to determine arguments
         defaults = {
@@ -292,7 +292,7 @@ def dataobject(cls):
                 f"{cls.__name__}.__init__() got unexpected keyword arguments {extra_args}"
             )
         else:
-            setattr(self, "__DataObject_fields", kwargs)
+            setattr(self, "__Entity_fields", kwargs)
 
         self.save()
 
@@ -319,16 +319,16 @@ def dataobject(cls):
     __init__.__signature__ = sig
     setattr(cls, "__init__", __init__)
 
-    # Make the class a DataObject type
-    cls = type(cls.__name__, (DataObject, cls), {})
-    DataObject._DataObject__types[cls.__name__] = cls
+    # Make the class a Entity type
+    cls = type(cls.__name__, (Entity, cls), {})
+    Entity._Entity__types[cls.__name__] = cls
 
     # Create getters and setters for each field
     for field_name, field_type in class_annotations.items():
         setattr(
             cls,
             field_name,
-            make_property(cls, field_name, field_type, DataObjectList, DataObjectSet),
+            make_property(cls, field_name, field_type, EntityList, EntitySet),
         )
 
     def _check(obj, func, invert, values, callables):
@@ -346,11 +346,11 @@ def dataobject(cls):
             return invert
 
     @classmethod
-    def get(cls, uuid: UUID) -> DataObject:
+    def get(cls, uuid: UUID) -> Entity:
         return next(
             (
                 obj
-                for obj in cls.__DataObject_instances
+                for obj in cls.__Entity_instances
                 if obj.UUID == (UUID(uuid) if type(uuid) is str else uuid)
             ),
             None,
@@ -360,11 +360,11 @@ def dataobject(cls):
 
     @classmethod
     def filter(
-        cls, func=__builtins__["all"], objects=cls.__DataObject_instances, **kwargs
-    ) -> DataObjectSet:
+        cls, func=__builtins__["all"], objects=cls.__Entity_instances, **kwargs
+    ) -> EntitySet:
         values = {k: v for k, v in kwargs.items() if not callable(v)}
         callables = {k: v for k, v in kwargs.items() if callable(v)}
-        return DataObjectSet(
+        return EntitySet(
             {
                 obj
                 for obj in objects
@@ -376,11 +376,11 @@ def dataobject(cls):
 
     @classmethod
     def exclude(
-        cls, func=__builtins__["all"], objects=cls.__DataObject_instances, **kwargs
-    ) -> DataObjectSet:
+        cls, func=__builtins__["all"], objects=cls.__Entity_instances, **kwargs
+    ) -> EntitySet:
         values = {k: v for k, v in kwargs.items() if not callable(v)}
         callables = {k: v for k, v in kwargs.items() if callable(v)}
-        return DataObjectSet(
+        return EntitySet(
             {
                 obj
                 for obj in objects
@@ -391,26 +391,26 @@ def dataobject(cls):
     setattr(cls, "exclude", exclude)
 
     @classmethod
-    def all(cls) -> DataObjectSet:
-        # return DataObjectSet(cls.__DataObject_instances)
-        return cls.__DataObject_instances
+    def all(cls) -> EntitySet:
+        # return EntitySet(cls.__Entity_instances)
+        return cls.__Entity_instances
 
     setattr(cls, "all", all)
 
     @classmethod
     def count(cls) -> int:
-        return len(cls.__DataObject_instances)
+        return len(cls.__Entity_instances)
 
     setattr(cls, "count", count)
 
-    # Create a folder to store data objects of this type and load instances
-    if cls.__DataObject_directory.exists():
-        for file in cls.__DataObject_directory.iterdir():
+    # Create a folder to store entities of this type and load instances
+    if cls.__Entity_directory.exists():
+        for file in cls.__Entity_directory.iterdir():
             with file.open("r", encoding="utf-8") as fp:
                 data = json.load(fp)
                 if isinstance(data, dict):
                     cls(**data, uuid=UUID(file.stem))
     else:
-        cls.__DataObject_directory.mkdir()
+        cls.__Entity_directory.mkdir()
 
     return cls

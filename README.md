@@ -1,7 +1,7 @@
-# Python Object Persistence
+# Simple Object Archive for Python (SOAP)
 
-This library provides a single `@dataobject` decorator for object persistence.
-Decorated classes will store their instances under `./data/<ClassName>` in `json` format with their UUID as filename.
+This library provides a single `@entity` decorator for object persistence.
+Decorated classes will store their instances under `./__data__/<ClassName>` in `json` format with their UUID as filename.
 `filter()` and `exclude()` methods are added as classmethods to query the existing objects.
 
 For each class variable that is annotated, a `property` will be provided with the same name.
@@ -10,7 +10,7 @@ Class variables whose annotation is also a decorated object or list thereof are 
 
 ## Example
 ```python
-@dataobject
+@entity
 class MyClassA:
     name: str
     health: int = 100
@@ -20,7 +20,7 @@ class MyClassA:
 This creates an `__init__`-function with the default arguments of the class variables.
 
 ```python
-@dataobject
+@entity
 class MyClassB:
     daddy: MyClassA # One-to-one relation
     other_items: list
@@ -68,7 +68,7 @@ print(type(a1.inventory))       # <class 'src.dataobject.dataobject.<locals>.Dat
 2. Currently, only `datetime` and `Path` objects are transcoded besides the builtins.
 
 ## Next steps
-- Explicit archiving, adding items to a `.zip` archive (to partially address limitation #1);
+- Explicit archiving, adding items to a (`.zip`) archive (to partially address limitation #1);
 - Option to disable implicit saving;
     - Combine with a `rollback` function to facilitate transactions;
 - Custom transcoders (to address limitation #2);
@@ -81,7 +81,9 @@ print(type(a1.inventory))       # <class 'src.dataobject.dataobject.<locals>.Dat
 - Optional integrations:
     - NiceGUI to have some kind of admin page;
 - Saving asynchronously;
-- Use a profiler to identify bottlenecks.
+
+- Use a profiler to identify bottlenecks;
+- Find a more fitting name.
 
 ## Issues
 - Deleting an object and then terminating the program may cause invalid refereces, which in turn may cause errors.

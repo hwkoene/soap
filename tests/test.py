@@ -1,5 +1,5 @@
 """
-The DataObject package provides a single-decorator way to persist Python objects.
+The Entity package provides a single-decorator way to persist Python objects.
 It acts like a filesystem variant of an ORM.
 Copyright (C) 2024 Hans Koene
 
@@ -20,14 +20,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from itertools import chain
 from pathlib import Path
 import unittest
-from src.dataobject import dataobject
+from src.entity import entity
 import random
 import string
 from datetime import datetime, timedelta
 import calendar
 import pytz
 
-@dataobject
+@entity
 class TestObjectA:
     name: str
     value: int
@@ -36,7 +36,7 @@ class TestObjectA:
     true_or_false: bool = False
     what_happens: set = {1, 5, 6}
 
-@dataobject
+@entity
 class TestObjectB:
     code: str
     timestamp: datetime = datetime.now()
@@ -44,7 +44,7 @@ class TestObjectB:
     ref_d_list: list['TestObjectD'] = []
     path_list: list[Path] = []
 
-@dataobject
+@entity
 class TestObjectC:
     active: bool
     tags: list[str]
@@ -52,7 +52,7 @@ class TestObjectC:
     ref_a: TestObjectA = None
     something: dict = {}
 
-@dataobject
+@entity
 class TestObjectD:
     priority: int
     description: str
@@ -61,7 +61,7 @@ class TestObjectD:
     datetime_list: list[datetime] = []
 
 
-class TestDataObjectSystem(unittest.TestCase):
+class TestEntitySystem(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
@@ -85,7 +85,7 @@ class TestDataObjectSystem(unittest.TestCase):
             TestObjectD(priority=random.randint(3, 10),
                         description=''.join(random.choices(string.ascii_letters, k=20)))
             
-        print(f'Test size: DataObject.count()')
+        print(f'Test size: Entity.count()')
             
         # Assign random references
         for obj_a in TestObjectA.all():
@@ -204,7 +204,7 @@ class TestDataObjectSystem(unittest.TestCase):
         obj_with_ref_to_deleted.ref_a = obj_to_delete
         obj_to_delete.delete()
         # NOTE: The refernce gets deleted with the first property get call to the attribute
-        # self.assertIsNone(getattr(obj_with_ref_to_deleted, '__DataObject_fields')['ref_a'])
+        # self.assertIsNone(getattr(obj_with_ref_to_deleted, '__Entity_fields')['ref_a'])
         self.assertIsNone(TestObjectA.get(obj_to_delete))
         self.assertIsNone(obj_with_ref_to_deleted.ref_a)
         
@@ -212,7 +212,7 @@ class TestDataObjectSystem(unittest.TestCase):
         obj_to_delete = random.sample(obj_with_ref_list_to_deleted.ref_c_list, 1)[0]
         obj_to_delete.delete()
         # NOTE: The refernce gets deleted with the first property get call to the attribute
-        # self.assertNotIn(obj_to_delete, getattr(obj_with_ref_list_to_deleted, '__DataObject_fields')['ref_c_list'])
+        # self.assertNotIn(obj_to_delete, getattr(obj_with_ref_list_to_deleted, '__Entity_fields')['ref_c_list'])
         self.assertNotIn(obj_to_delete, getattr(obj_with_ref_list_to_deleted, 'ref_c_list'))
         self.assertNotIn(obj_to_delete, obj_with_ref_list_to_deleted.ref_c_list)
         

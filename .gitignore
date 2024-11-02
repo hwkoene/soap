@@ -2,6 +2,6 @@
 .mypy_cache
 .vscode
 __pycache__
-data
+__data__
 dist/*
 *.egg-info

@@ -1,5 +1,5 @@
 [project]
-name = "dataobject_hwkoene"
+name = "soap"
 version = "0.0.1"
 authors = [
   { name="Hans Koene", email="hwkoene@gmail.com" },
@@ -17,4 +17,4 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/hwkoene/dataobject"
+Homepage = "https://github.com/hwkoene/soap"
