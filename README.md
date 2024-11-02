@@ -17,7 +17,7 @@ class MyClassA:
     my_path: Path = None
     inventory: set['MyClassB'] = set() # One-to-many
 ```
-This creates an `__init__` with the default arguments of the class variables.
+This creates an `__init__`-function with the default arguments of the class variables.
 
 ```python
 @dataobject
@@ -43,7 +43,7 @@ b2 = MyClassB(daddy=a2,
 ```
 
 Because `MyClassA.inventory` is annotated with `set['MyClassB']`[^1], the `getattr` function returns a `DataObjectList` type.
-This is basically a `list` with `filter()` and `exlude()` methods to perfor queries.
+This is basically a `list` with `filter()` and `exlude()` methods to perform queries.
 Additionally, operations like `append` and `remove` are wrapped to save the object afterwards.
 
 [^1]: Behaviour is similar with annotations like `MyClassX`, `'MyClassX'`, `set[MyClassX]`, `list[MyClassX]`, `list['MyClassX']`.
@@ -69,7 +69,7 @@ print(type(a1.inventory))       # <class 'src.dataobject.dataobject.<locals>.Dat
 ## Next steps
 - Explicit archiving, adding items to a `.zip` archive (to partially address limitation #1);
 - Option to disable implicit saving;
-    - Combine with a `rollback` function to implement transactions;
+    - Combine with a `rollback` function to facilitate transactions;
 - Custom transcoders (to address limitation #2);
 - Typechecking for getters and setters;
 - Derive date created from file metadata;

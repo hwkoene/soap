@@ -51,8 +51,8 @@ a2.inventory.add(b2)
 
 cheese_i_have = a1.inventory.filter(other_items=lambda x: "Some cheese" in x)
 steve_not_my_daddy = MyClassB.exclude(daddy=lambda x: x.name.startswith('Steve'))
-print(cheese_i_have)        # [b1]
-print(steve_not_my_daddy)   # [b1]
+print(cheese_i_have)        # {b1}
+print(steve_not_my_daddy)   # {b1}
 
 print(type(steve_not_my_daddy)) # <class 'src.dataobject.dataobject.<locals>.DataObjectList'>
 print(type(a1.inventory))       # <class 'src.dataobject.dataobject.<locals>.DataObjectList'>

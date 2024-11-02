@@ -1,0 +1,17 @@
+[project]
+name = "dataobject_hwkoene"
+version = "0.0.1"
+authors = [
+  { name="Hans Koene", email="hwkoene@gmail.com" },
+]
+description = "Package providing a decorator for object persistence."
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/pypa/sampleproject"
