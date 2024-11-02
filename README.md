@@ -6,7 +6,7 @@ Decorated classes will store their instances under `./data/<ClassName>` in `json
 
 For each class variable that is annotated, a `property` will be provided with the same name.
 
-Class variables whos annotation is also a decorated object or list thereof are stored as a string of their UUID and will be resolved when their `get()` method is first called.
+Class variables whose annotation is also a decorated object or list thereof are stored as a string of their UUID and will be resolved when their `get()` method is first called.
 
 ## Example
 ```python
