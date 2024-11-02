@@ -32,7 +32,7 @@ import inspect
 from inspect import signature, Parameter
 
 # --- Internal ---
-from src.properties import make_property
+from properties import make_property
 
 
 class DataObject:
@@ -62,6 +62,7 @@ class DataObject:
     """
     __types: dict[str, __qualname__] = {}
     __directory: Path = Path.cwd() / 'data'
+    __directory.mkdir(exist_ok=True)
         
     class DataObjectList(list):
         def __init__(self, *args, **kwargs):
