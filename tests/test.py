@@ -1,5 +1,5 @@
 """
-The Entity package provides a single-decorator way to persist Python objects.
+The SOAP package provides a single-decorator solution to persist Python objects.
 It acts like a filesystem variant of an ORM.
 Copyright (C) 2024 Hans Koene
 
@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from itertools import chain
 from pathlib import Path
 import unittest
-from src.entity import entity
+from src.soap.entity import entity
 import random
 import string
 from datetime import datetime, timedelta
@@ -48,7 +48,7 @@ class TestObjectB:
 class TestObjectC:
     active: bool
     tags: list[str]
-    ref_b_list: set[TestObjectB] = []
+    ref_b_set: set[TestObjectB] = []
     ref_a: TestObjectA = None
     something: dict = {}
 
@@ -99,7 +99,7 @@ class TestEntitySystem(unittest.TestCase):
 
         for obj_c in TestObjectC.all():
             obj_c.ref_a = TestObjectA.all().sample(1)[0]
-            obj_c.ref_b_list = TestObjectB.all().sample(random.randint(0, TestObjectB.count()))
+            obj_c.ref_b_set = TestObjectB.all().sample(random.randint(0, TestObjectB.count()))
         
 
         def random_date():
@@ -121,19 +121,19 @@ class TestEntitySystem(unittest.TestCase):
             obj_d.ref_b = TestObjectB.all().sample(1)[0]
             obj_d.datetime_list = [random_date()]*3
             
-    # @classmethod
-    # def tearDownClass(cls):
-    #     for obj in list(TestObjectA.all()):
-    #         obj.delete()
+    @classmethod
+    def tearDownClass(cls):
+        for obj in list(TestObjectA.all()):
+            obj.delete()
         
-    #     for obj in list(TestObjectB.all()):
-    #         obj.delete()
+        for obj in list(TestObjectB.all()):
+            obj.delete()
         
-    #     for obj in list(TestObjectC.all()):
-    #         obj.delete()
+        for obj in list(TestObjectC.all()):
+            obj.delete()
         
-    #     for obj in list(TestObjectD.all()):
-    #         obj.delete()
+        for obj in list(TestObjectD.all()):
+            obj.delete()
 
     def test_reference_integrity(self):
         for obj_a in TestObjectA.all():
@@ -153,13 +153,10 @@ class TestEntitySystem(unittest.TestCase):
     def test_filter_complex(self):
         # Test filtering TestObjectC by active status and tag count
         filtered_c = TestObjectC.filter(active=True, tags=lambda t: len(t) > 2)
-        TestObjectB.filter(objects=list(filtered_c)[0].ref_b_list, timestamp=lambda ts: ts < datetime.now())
+        TestObjectB.filter(objects=list(filtered_c)[0].ref_b_set, timestamp=lambda ts: ts < datetime.now())
         obj_to_append = TestObjectB.all().sample(1)[0]
-        list(filtered_c)[0].ref_b_list.add(obj_to_append)
-        # list(filtered_c)[0].ref_b_list.reverse()
-        # obj_to_remove = random.choice(list(filtered_c)[0].ref_b_list)
-        # list(filtered_c)[0].ref_b_list.remove(obj_to_remove)
-        set_to_sort = random.choice(list(filtered_c)).ref_b_list
+        list(filtered_c)[0].ref_b_set.add(obj_to_append)
+        set_to_sort = random.choice(list(filtered_c)).ref_b_set
         set_to_sort.sort(key=lambda x: x.timestamp)
         sorted(set_to_sort, key=lambda x: x.timestamp)
         self.assertTrue(all(obj.active and len(obj.tags) > 2 for obj in filtered_c))

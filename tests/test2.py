@@ -1,5 +1,5 @@
 """
-The Entity package provides a single-decorator way to persist Python objects.
+The SOAP package provides a single-decorator solution to persist Python objects.
 It acts like a filesystem variant of an ORM.
 Copyright (C) 2024 Hans Koene
 
@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from datetime import datetime
 from pathlib import Path
 import random
-from src.entity import entity
+from src.soap.entity import entity
 
 @entity
 class MyClassA:
