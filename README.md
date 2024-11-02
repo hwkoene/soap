@@ -42,8 +42,8 @@ b2 = MyClassB(daddy=a2,
               other_items=[b1])
 ```
 
-Because `MyClassA.inventory` is annotated with `set['MyClassB']`[^1], the `getattr` function returns a `Entity` type.
-This is basically a `list` with `filter()` and `exlude()` methods to perform queries.
+Because `MyClassA.inventory` is annotated with `set['MyClassB']`[^1], the `getattr` function returns a `EntitySet` type.
+This is basically a `set` with `filter()` and `exlude()` methods to perform queries.
 Additionally, operations like `append` and `remove` are wrapped to save the object afterwards.
 
 [^1]: Behaviour is similar with annotations like `MyClassX`, `'MyClassX'`, `set[MyClassX]`, `list[MyClassX]`, `list['MyClassX']`.

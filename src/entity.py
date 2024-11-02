@@ -62,6 +62,9 @@ class Entity:
 
         def exclude(self, func=__builtins__["all"], **kwargs) -> EntitySet:
             return Entity.exclude(func=func, objects=self, **kwargs)
+        
+        def sort(self, key, reverse=False) -> EntityList:
+            return sorted(self, key=key, reverse=reverse)
 
     @classmethod
     def get(cls, uuid: UUID):
@@ -183,6 +186,9 @@ def entity(cls):
 
         def sample(self, k) -> EntityList:
             return EntityList(random.sample(list(self), k))
+        
+        def sort(self, key, reverse=False):
+            return sorted(self, key=key, reverse=reverse)
 
         def save_after(func):
             # Save after editing a EntitySet or EntityList

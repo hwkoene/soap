@@ -48,7 +48,7 @@ class TestObjectB:
 class TestObjectC:
     active: bool
     tags: list[str]
-    ref_b_list: list[TestObjectB] = []
+    ref_b_list: set[TestObjectB] = []
     ref_a: TestObjectA = None
     something: dict = {}
 
@@ -155,10 +155,13 @@ class TestEntitySystem(unittest.TestCase):
         filtered_c = TestObjectC.filter(active=True, tags=lambda t: len(t) > 2)
         TestObjectB.filter(objects=list(filtered_c)[0].ref_b_list, timestamp=lambda ts: ts < datetime.now())
         obj_to_append = TestObjectB.all().sample(1)[0]
-        list(filtered_c)[0].ref_b_list.append(obj_to_append)
-        list(filtered_c)[0].ref_b_list.reverse()
-        obj_to_remove = random.choice(list(filtered_c)[0].ref_b_list)
-        list(filtered_c)[0].ref_b_list.remove(obj_to_remove)
+        list(filtered_c)[0].ref_b_list.add(obj_to_append)
+        # list(filtered_c)[0].ref_b_list.reverse()
+        # obj_to_remove = random.choice(list(filtered_c)[0].ref_b_list)
+        # list(filtered_c)[0].ref_b_list.remove(obj_to_remove)
+        set_to_sort = random.choice(list(filtered_c)).ref_b_list
+        set_to_sort.sort(key=lambda x: x.timestamp)
+        sorted(set_to_sort, key=lambda x: x.timestamp)
         self.assertTrue(all(obj.active and len(obj.tags) > 2 for obj in filtered_c))
 
         # Test filtering TestObjectD by priority and reference to TestObjectB
