@@ -36,31 +36,6 @@ from properties import make_property
 
 
 class DataObject:
-    """
-    TODO:
-        Meta
-        1. Add testing (stress/functionality)
-        2. Error handling
-        3. Use cases:
-            a. Check if network persistence is possible (blocked by Functionality #3)
-
-        Functionality
-        1. Return list[DataObject] fields as DataObjectList to allow querying
-        2. Make DataObjectList operations update the object
-        3. Add watchdog functionality
-        4. Add archiving functionality
-        5. Integrate with NiceGUI
-        6. (Custom) transcoding for more types
-
-        Bugs:
-        1. Attributes annotated with DataObject subclasses get stored as strings, but not restored.
-
-    Notes:
-        Class variables with no type hint don't get picked up because they are not in __class__.__annotations__.
-        A reference to a DataObject annotated with a string will get resolved when queried.
-
-    """
-
     __types: dict[str, __qualname__] = {}
     __directory: Path = Path.cwd() / "data"
     __directory.mkdir(exist_ok=True)
