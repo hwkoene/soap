@@ -79,9 +79,9 @@ print(type(a1.inventory))       # <class 'src.entity.entity.<locals>.Entity'>
 - Custom assignment of data folder;
 - Allow creaton/modification/deletion of objects from files using watchdog to monitor the data directory for changes;
     - This may allow this framework to function as a synchronized database when combined with something like `portalocker`;
-- CSV file writing of all objects;
 - Optional integrations:
     - NiceGUI to have some kind of admin page;
+- Make available on pypi
 
 
 ## Issues

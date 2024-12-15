@@ -13,7 +13,8 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-  "pytz"
+  "pytz",
+  "openpyxl"
 ]
 
 [project.urls]

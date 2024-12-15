@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # --- Built-in ---
 from __future__ import annotations
+from copy import copy
 from datetime import datetime
 from functools import wraps
 from itertools import chain
@@ -30,6 +31,8 @@ import random
 from uuid import UUID, uuid4
 import inspect
 from inspect import signature, Parameter
+from openpyxl import Workbook
+from openpyxl.worksheet.table import Table
 
 # --- Internal ---
 from .properties import make_property
@@ -44,26 +47,26 @@ class Entity:
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
 
-        def filter(self, func=__builtins__["all"], **kwargs) -> EntityList:
+        def filter(self, func=__builtins__["all"], **kwargs) -> Entity.EntityList:
             return Entity.filter(func=func, objects=self, **kwargs)
 
-        def exclude(self, func=__builtins__["all"], **kwargs) -> EntityList:
+        def exclude(self, func=__builtins__["all"], **kwargs) -> Entity.EntityList:
             return Entity.exclude(func=func, objects=self, **kwargs)
 
-        def sort(self, key, reverse=False) -> EntityList:
+        def sort(self, key, reverse=False) -> Entity.EntityList:
             return sorted(self, key=key, reverse=reverse)
 
     class EntitySet(set):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
 
-        def filter(self, func=__builtins__["all"], **kwargs) -> EntitySet:
+        def filter(self, func=__builtins__["all"], **kwargs) -> Entity.EntitySet:
             return Entity.filter(func=func, objects=self, **kwargs)
 
-        def exclude(self, func=__builtins__["all"], **kwargs) -> EntitySet:
+        def exclude(self, func=__builtins__["all"], **kwargs) -> Entity.EntitySet:
             return Entity.exclude(func=func, objects=self, **kwargs)
         
-        def sort(self, key, reverse=False) -> EntityList:
+        def sort(self, key, reverse=False) -> Entity.EntityList:
             return sorted(self, key=key, reverse=reverse)
 
     @classmethod
@@ -76,7 +79,7 @@ class Entity:
 
     @classmethod
     def filter(cls, func=all, **kwargs) -> EntitySet:
-        matches = EntitySet()
+        matches = Entity.EntitySet()
         for subcls in Entity.__types.values():
             if all(hasattr(subcls, k) for k in kwargs.keys()):
                 matches += subcls.filter(func=func, **kwargs)
@@ -84,7 +87,7 @@ class Entity:
 
     @classmethod
     def exclude(cls, func=all, **kwargs) -> EntitySet:
-        matches = EntitySet()
+        matches = Entity.EntitySet()
         for subcls in Entity.__types.values():
             if all(hasattr(subcls, k) for k in kwargs.keys()):
                 matches += subcls.exclude(func=func, **kwargs)
@@ -92,7 +95,7 @@ class Entity:
 
     @classmethod
     def all() -> EntitySet:
-        instances = EntitySet()
+        instances = Entity.EntitySet()
         for subcls in Entity.__types.values():
             instances += subcls.all()
         return instances
@@ -105,11 +108,12 @@ class Entity:
         return counter
 
     @classmethod
-    def export() -> None:
-        raise NotImplementedError(
-            "This function should export all entities to their own tab in a .csv file."
-        )
-
+    def export_all(cls, filename):
+        wb = Workbook()
+        del wb[wb.active.title]
+        for subcls in Entity.__types.values():
+            subcls.export(filename, workbook=wb)
+        wb.save(filename)
 
 class EntityEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -123,8 +127,8 @@ class EntityEncoder(json.JSONEncoder):
             return str(obj)
         elif isinstance(obj, set):
             return tuple(obj)
-
-        return super().default(obj)
+        else:
+            return super().default(obj)
 
 
 def entity(cls):
@@ -408,6 +412,51 @@ def entity(cls):
         return len(cls.__Entity_instances)
 
     setattr(cls, "count", count)
+    
+    @classmethod
+    def _encode_for_xlsx(cls, obj):
+        if isinstance(obj, Entity):
+            return str(obj.UUID)
+        elif isinstance(obj, (UUID, Path)):
+            return str(obj)
+        elif isinstance(obj, datetime):
+            return obj.isoformat()
+        elif isinstance(obj, set):
+            return str({cls._encode_for_xlsx(nested_obj) for nested_obj in obj})
+        elif isinstance(obj, list):
+            return str([cls._encode_for_xlsx(nested_obj) for nested_obj in obj])
+        elif isinstance(obj, dict):
+            return str({x: cls._encode_for_xlsx(obj[x]) for x in obj})
+            
+        else:
+            return obj
+        
+    setattr(cls, "_encode_for_xlsx", _encode_for_xlsx)
+    
+    # Export instances of a single class to a csv file
+    @classmethod
+    def export(cls, filename: str, workbook=None):
+        if not workbook:
+            wb = Workbook()
+            del wb[wb.active.title]
+        else:
+            wb = workbook
+            
+        wb.create_sheet(cls.__name__, )    
+        ws = wb[cls.__name__]
+            
+        ws.append(["UUID"]+list(class_annotations.keys()))
+        
+        for i in cls.__Entity_instances:
+            ws.append([str(i.UUID)] + [cls._encode_for_xlsx(val) for val in i.__Entity_fields.values()])
+
+        table = Table(displayName=cls.__name__, ref=ws.dimensions)
+        ws.add_table(table)
+        
+        if not workbook:
+            wb.save(filename)
+                
+    setattr(cls, "export", export)
 
     # Create a folder to store entities of this type and load instances
     if cls.__Entity_directory.exists():

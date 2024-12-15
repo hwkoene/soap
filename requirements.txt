@@ -1,2 +1,10 @@
+# Core
 pytz
+openpyxl
+
+# Testing
 profilehooks
+
+# Building
+twine
+build

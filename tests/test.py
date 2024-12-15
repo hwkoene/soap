@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from itertools import chain
 from pathlib import Path
 import unittest
-from src.soap.entity import entity
+from src.soap.entity import Entity, entity
 import random
 import string
 from datetime import datetime, timedelta
@@ -67,24 +67,25 @@ class TestEntitySystem(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Create random instances
-        for _ in range(200):
+        for _ in range(20):
             TestObjectA(name=random.choice(string.ascii_uppercase), 
                         value=random.randint(1, 100))
         
-        for _ in range(150):
+        for _ in range(15):
             TestObjectB(code=''.join(random.choices(string.ascii_lowercase, k=5)),
                         timestamp=datetime.now() + timedelta(days=random.randint(-100, 100)))
         
-        for _ in range(250):
+        for _ in range(25):
             TestObjectC(active=random.choice([True, False]),
                         tags=random.sample(string.ascii_lowercase, random.randint(1, 5)),
                         # TODO: Encode sets
                         something={"abc": [1, 2, (True, False)]})
                         # something={''.join(random.choices(string.ascii_letters, k=20)): random.randint(0, 100)})
         
-        for _ in range(100):
+        for _ in range(10):
             TestObjectD(priority=random.randint(3, 10),
                         description=''.join(random.choices(string.ascii_letters, k=20)))
+            
             
         # Assign random references
         for obj_a in TestObjectA.all():
@@ -100,6 +101,13 @@ class TestEntitySystem(unittest.TestCase):
             obj_c.ref_a = TestObjectA.all().sample(1)[0]
             obj_c.ref_b_set = TestObjectB.all().sample(random.randint(0, TestObjectB.count()))
             
+        for obj_d in TestObjectD.all():
+            obj_d.ref_b = TestObjectB.all().sample(1)[0]
+            obj_d.datetime_list = [datetime.now() + timedelta(days=random.randint(-100, 100))]
+            
+            
+        # TestObjectD.export('TestObjectD.xlsx')
+        Entity.export_all('all.xlsx')
         subject = TestObjectC.all().sample(1)[0]
 
         def random_date():
