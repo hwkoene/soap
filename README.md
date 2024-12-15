@@ -73,6 +73,8 @@ print(type(a1.inventory))       # <class 'src.entity.entity.<locals>.Entity'>
     - Combine with a `rollback` function to facilitate transactions;
 - Custom transcoders (to address limitation #2);
 - Typechecking for getters and setters;
+- Make deletion instant by tracking references;
+    - Using objgraph to get the references and also visualise them
 - Derive date created from file metadata;
 - Custom assignment of data folder;
 - Allow creaton/modification/deletion of objects from files using watchdog to monitor the data directory for changes;
@@ -80,10 +82,7 @@ print(type(a1.inventory))       # <class 'src.entity.entity.<locals>.Entity'>
 - CSV file writing of all objects;
 - Optional integrations:
     - NiceGUI to have some kind of admin page;
-- Saving asynchronously;
 
-- Use a profiler to identify bottlenecks;
-- Find a more fitting name.
 
 ## Issues
 - Deleting an object and then terminating the program may cause invalid refereces, which in turn may cause errors.
