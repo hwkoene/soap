@@ -26,6 +26,7 @@ import string
 from datetime import datetime, timedelta
 import calendar
 import pytz
+from profilehooks import profile
 
 @entity
 class TestObjectA:
@@ -66,26 +67,24 @@ class TestEntitySystem(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Create random instances
-        for _ in range(20):
+        for _ in range(200):
             TestObjectA(name=random.choice(string.ascii_uppercase), 
                         value=random.randint(1, 100))
         
-        for _ in range(15):
+        for _ in range(150):
             TestObjectB(code=''.join(random.choices(string.ascii_lowercase, k=5)),
                         timestamp=datetime.now() + timedelta(days=random.randint(-100, 100)))
         
-        for _ in range(25):
+        for _ in range(250):
             TestObjectC(active=random.choice([True, False]),
                         tags=random.sample(string.ascii_lowercase, random.randint(1, 5)),
                         # TODO: Encode sets
                         something={"abc": [1, 2, (True, False)]})
                         # something={''.join(random.choices(string.ascii_letters, k=20)): random.randint(0, 100)})
         
-        for _ in range(10):
+        for _ in range(100):
             TestObjectD(priority=random.randint(3, 10),
                         description=''.join(random.choices(string.ascii_letters, k=20)))
-            
-        print(f'Test size: Entity.count()')
             
         # Assign random references
         for obj_a in TestObjectA.all():
@@ -100,7 +99,8 @@ class TestEntitySystem(unittest.TestCase):
         for obj_c in TestObjectC.all():
             obj_c.ref_a = TestObjectA.all().sample(1)[0]
             obj_c.ref_b_set = TestObjectB.all().sample(random.randint(0, TestObjectB.count()))
-        
+            
+        subject = TestObjectC.all().sample(1)[0]
 
         def random_date():
             year = random.randint(1, 9999)  # Datetime supports years 1-9999
@@ -135,11 +135,14 @@ class TestEntitySystem(unittest.TestCase):
         for obj in list(TestObjectD.all()):
             obj.delete()
 
+    @profile(stdout=False, filename='profiling/test_reference_integrity.prof')
     def test_reference_integrity(self):
         for obj_a in TestObjectA.all():
             self.assertIsInstance(obj_a.ref_b, TestObjectB)
             self.assertTrue(all(isinstance(obj, TestObjectC) for obj in obj_a.ref_c_list))
 
+    
+    @profile(stdout=False, filename='profiling/test_filter_basic.prof')
     def test_filter_basic(self):
         # Test filtering TestObjectA by value
         filtered_a = TestObjectA.filter(value=lambda x: x > 50)
@@ -150,6 +153,7 @@ class TestEntitySystem(unittest.TestCase):
         filtered_b = TestObjectB.filter(timestamp=lambda t: t > one_month_ago)
         self.assertTrue(all(obj.timestamp > one_month_ago for obj in filtered_b))
 
+    @profile(stdout=False, filename='profiling/test_filter_complex.prof')
     def test_filter_complex(self):
         # Test filtering TestObjectC by active status and tag count
         filtered_c = TestObjectC.filter(active=True, tags=lambda t: len(t) > 2)
@@ -168,6 +172,7 @@ class TestEntitySystem(unittest.TestCase):
         
         self.assertTrue(all(obj.priority >= 3 and obj.ref_b.code.startswith('a') for obj in extra_filtered_d))
 
+    @profile(stdout=False, filename='profiling/test_exclude_basic.prof')
     def test_exclude_basic(self):
         # Test excluding TestObjectA by value
         excluded_a = TestObjectA.exclude(value=lambda x: x <= 50)
@@ -178,6 +183,7 @@ class TestEntitySystem(unittest.TestCase):
         excluded_b = TestObjectB.exclude(timestamp=lambda t: t <= one_month_ago)
         self.assertTrue(all(obj.timestamp > one_month_ago for obj in excluded_b))
 
+    @profile(stdout=False, filename='profiling/test_exclude_complex.prof')
     def test_exclude_complex(self):
         # Test excluding TestObjectC by active status and tag count
         excluded_c = TestObjectC.exclude(active=False, tags=lambda t: len(t) <= 2)
@@ -187,17 +193,20 @@ class TestEntitySystem(unittest.TestCase):
         excluded_d = TestObjectD.exclude(priority=lambda p: p <= 3, ref_b=lambda b: not b.code.startswith('a'))
         self.assertTrue(all(obj.priority > 3 or obj.ref_b.code.startswith('a') for obj in excluded_d))
 
+    @profile(stdout=False, filename='profiling/test_chained_filtering.prof')
     def test_chained_filtering(self):
         # Test chained filtering across multiple object types
         high_value_a = TestObjectA.filter(value=lambda x: x > 75)
         related_c = TestObjectC.filter(ref_a=lambda a: a in high_value_a)
         self.assertTrue(all(obj.ref_a.value > 75 for obj in related_c))
 
+    @profile(stdout=False, filename='profiling/test_get_by_uuid.prof')
     def test_get_by_uuid(self):
         obj_a = TestObjectA.all().sample(1)[0]
         retrieved_obj = TestObjectA.get(obj_a.UUID)
         self.assertEqual(obj_a, retrieved_obj)
-
+       
+    @profile(stdout=False, filename='profiling/test_delete.prof')
     def test_delete(self):
         obj_to_delete = TestObjectA.all().sample(1)[0]
         obj_with_ref_to_deleted = TestObjectB.all().sample(1)[0]
@@ -215,7 +224,8 @@ class TestEntitySystem(unittest.TestCase):
         # self.assertNotIn(obj_to_delete, getattr(obj_with_ref_list_to_deleted, '__Entity_fields')['ref_c_list'])
         self.assertNotIn(obj_to_delete, getattr(obj_with_ref_list_to_deleted, 'ref_c_list'))
         self.assertNotIn(obj_to_delete, obj_with_ref_list_to_deleted.ref_c_list)
-        
+    
+    @profile(stdout=False, filename='profiling/test_custom_fields.prof')  
     def test_custom_fields(self):
         # Path
         obj_with_path = TestObjectD.all().sample(1)[0]
@@ -230,7 +240,10 @@ class TestEntitySystem(unittest.TestCase):
         self.assertTrue(all(isinstance(timestamp, datetime) for timestamp in obj_with_datetime_list.datetime_list))
 
 
-if __name__ == '__main__':
+    
+@profile(stdout=False, filename='profiling/main.prof')
+def main():
     unittest.main()
     
-    
+if __name__ == '__main__':
+    main()

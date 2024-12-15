@@ -5,3 +5,4 @@ __pycache__
 __data__
 dist/*
 *.egg-info
+profiling/*.prof
